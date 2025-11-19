@@ -2,31 +2,33 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-export default function Login() {
+export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const login = async () => {
-    const res = await axios.post("http://localhost:8443/api/login", {
-      username,
-      password,
-    });
+  const register = async () => {
+    try {
+      await axios.post("http://localhost:8443/api/register", {
+        username,
+        password,
+      });
 
-    localStorage.setItem("ACCESS_TOKEN", res.data.accessToken);
-
-    alert("로그인 성공");
-    window.location.href = "/agent";
+      alert("회원가입 성공!");
+      navigate("/"); // 회원가입 성공 → 로그인 페이지로 이동
+    } catch (e: any) {
+      alert(e.response?.data?.message || "회원가입 실패");
+    }
   };
 
-  const goToRegister = () => {
-    navigate("/register");
+  const goToLogin = () => {
+    navigate("/");
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.box}>
-        <h2 style={styles.title}>로그인</h2>
+        <h2 style={styles.title}>회원가입</h2>
 
         <input
           style={styles.input}
@@ -43,13 +45,13 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button style={styles.button} onClick={login}>
-          로그인
+        <button style={styles.button} onClick={register}>
+          회원가입
         </button>
 
-        {/* 회원가입 버튼 추가 */}
-        <button style={styles.registerButton} onClick={goToRegister}>
-          회원가입
+        {/* 🔥 로그인 페이지로 돌아가기 버튼 */}
+        <button style={styles.loginButton} onClick={goToLogin}>
+          로그인 페이지로 돌아가기
         </button>
       </div>
     </div>
@@ -88,17 +90,17 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: "10px",
     fontSize: "16px",
     borderRadius: "5px",
-    backgroundColor: "#007bff",
+    backgroundColor: "#28a745", // 초록색
     color: "white",
     border: "none",
     cursor: "pointer",
   },
-  registerButton: {
+  loginButton: {
     marginTop: "10px",
     padding: "10px",
     fontSize: "16px",
     borderRadius: "5px",
-    backgroundColor: "#28a745", // 초록색 버튼
+    backgroundColor: "#007bff", // 파란색
     color: "white",
     border: "none",
     cursor: "pointer",
