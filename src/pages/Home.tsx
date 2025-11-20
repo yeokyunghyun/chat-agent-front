@@ -14,6 +14,7 @@ export default function Login() {
     });
 
     localStorage.setItem("ACCESS_TOKEN", res.data.accessToken);
+    localStorage.setItem("REFRESH_TOKEN", res.data.refreshToken);
 
     alert("로그인 성공");
     window.location.href = "/agent";
