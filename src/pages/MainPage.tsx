@@ -5,7 +5,7 @@ import SockJS from "sockjs-client";
 export default function AgentPage() {
   const [messages, setMessages] = useState<string[]>([]);
   const clientRef = useRef<any>(null);
-
+  
   useEffect(() => {
     const socket = new SockJS("http://localhost:8443/ws");
     const client = Stomp.over(socket);

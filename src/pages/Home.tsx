@@ -1,24 +1,17 @@
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux'
+import { login } from '@/slices/auth'
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const dispatch = useDispatch()
 
-  const login = async () => {
-    const res = await axios.post("http://localhost:8443/api/login", {
-      username,
-      password,
-    });
-
-    localStorage.setItem("ACCESS_TOKEN", res.data.accessToken);
-    localStorage.setItem("REFRESH_TOKEN", res.data.refreshToken);
-
-    alert("로그인 성공");
-    window.location.href = "/agent";
-  };
+  const loginUser = () => {
+    dispatch(login({username, password}));
+  }
 
   const goToRegister = () => {
     navigate("/register");
@@ -44,7 +37,7 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button style={styles.button} onClick={login}>
+        <button style={styles.button} onClick={loginUser}>
           로그인
         </button>
 
