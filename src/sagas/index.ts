@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { getAuth } from "@/selectors";
 
 import axios from "axios"
+import type { AuthState } from '@/types';
 
 function* loginUser(action: ReturnType<typeof login>) {
   try {
@@ -18,7 +19,8 @@ function* loginUser(action: ReturnType<typeof login>) {
     localStorage.setItem("REFRESH_TOKEN", data.refreshToken)
 
     yield put(loginSuccess(username))
-    const auth = useSelector(getAuth);
+    // const auth = useSelector(getAuth);
+    const auth: AuthState = yield select(getAuth); // 사가에서는 select 이펙트 사용
     console.log('auth >>> ', auth);
 
   } catch (err: any) {

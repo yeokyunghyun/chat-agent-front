@@ -5,6 +5,7 @@ import { configureStore} from '@reduxjs/toolkit'
 import createSagaMiddleware from 'redux-saga'
 import rootReducer from '@/slices'
 import { Provider } from 'react-redux'
+import rootSaga from './sagas/index.ts'
 
 
 const sagaMiddleware = createSagaMiddleware()
@@ -18,6 +19,9 @@ const store = configureStore({
     }).concat(sagaMiddleware),
   devTools: process.env.NODE_ENV !== 'production',
 })
+
+// sagaMiddleware 실행
+sagaMiddleware.run(rootSaga);
 
 createRoot(document.getElementById('root')!).render(
   <Provider store={store}>

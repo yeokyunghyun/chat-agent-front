@@ -1,14 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { login } from '@/slices/auth'
+import { getAuth } from "@/selectors";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch()
+  const auth = useSelector(getAuth);
 
+  // 로그인 성공 시 상담 페이지로 이동
+  useEffect(() => {
+    if(auth.username && !auth.error) {
+      navigate("/agent");
+    }
+  }, [auth.username, auth.error, navigate]);
+
+
+  // 로그인 버튼 클릭 시 로그인 액션 디스패치
   const loginUser = () => {
     dispatch(login({username, password}));
   }
