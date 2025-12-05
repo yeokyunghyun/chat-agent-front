@@ -1,9 +1,13 @@
-import { combineReducers } from 'redux'
+import { combineReducers } from '@reduxjs/toolkit';
 
-import authReducer from '@/slices/auth'
+import authReducer from '@/slices/auth';
+import chatReducer from '@/slices/chat';
 
 const rootReducer = combineReducers({
-  authState: authReducer
-})
+  auth: authReducer,
+  chat: chatReducer,
+});
 
-export default rootReducer
+export type RootState = ReturnType<typeof rootReducer>;
+
+export default rootReducer;
