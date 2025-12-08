@@ -25,7 +25,12 @@ export default function AgentPage() {
 
   // 자동 스크롤
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // skip scrolling when there are no messages to avoid whole page jump
+    if (!messages.length) return;
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
   }, [messages]);
 
   // 웹소켓 연결 + 초기 데이터
@@ -124,7 +129,14 @@ export default function AgentPage() {
   };
 
   return (
-    <div style={{ display: "flex", width: "100%", height: "100%" }}>
+    <div
+      style={{
+        display: "flex",
+        width: "100%",
+        height: "100%",
+        boxSizing: "border-box",
+      }}
+    >
       
       <CustListBar
         consultationRequests={consultationRequests}

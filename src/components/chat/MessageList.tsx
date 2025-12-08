@@ -10,7 +10,7 @@ interface Props {
   messagesEndRef: any;
 }
 
-export default function CenterChatPanel({
+export default function MessageList({
   selectedRequest,
   messages,
   inputMessage,

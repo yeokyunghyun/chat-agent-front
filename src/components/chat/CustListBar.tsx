@@ -10,7 +10,7 @@ interface Props {
   onClickRequest: (req: ConsultationRequest) => void;
 }
 
-export default function LeftPanel({
+export default function CustListBar({
   consultationRequests,
   consultationHistory,
   selectedRequest,

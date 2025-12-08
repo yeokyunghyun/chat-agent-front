@@ -10,7 +10,7 @@ interface Props {
   setActiveTab: (v: "history" | "info") => void;
 }
 
-export default function RightPanel({
+export default function CustDetailBar({
   selectedRequest,
   consultationHistory,
   activeTab,
