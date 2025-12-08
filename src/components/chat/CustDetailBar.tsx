@@ -19,7 +19,7 @@ export default function CustDetailBar({
   return (
     <div
       style={{
-        width: "300px",
+        width: "100%",
         display: "flex",
         flexDirection: "column",
       }}

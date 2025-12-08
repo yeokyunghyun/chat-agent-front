@@ -19,7 +19,7 @@ export default function CustListBar({
   return (
     <div
       style={{
-        width: "300px",
+        width: "100%",
         borderRight: "1px solid #ddd",
         display: "flex",
         flexDirection: "column",

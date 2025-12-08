@@ -11,6 +11,7 @@ import {
   type ConsultationRequest,
   type ConsultationHistory,
 } from "@/types/chat";
+import HeaderBar from "@/components/common/HeaderBar";
 
 export default function AgentPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -129,38 +130,86 @@ export default function AgentPage() {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        width: "100%",
-        height: "100%",
-        boxSizing: "border-box",
-      }}
-    >
-      
-      <CustListBar
-        consultationRequests={consultationRequests}
-        consultationHistory={consultationHistory}
-        selectedRequest={selectedRequest}
-        onClickRequest={handleRequestClick}
-      />
+    <div style={{ height: "100%", padding: "18px 6px 18px 6px", boxSizing: "border-box" }}>
+      <div
+        style={{
+          maxWidth: "1400px",
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          height: "100%",
+        }}
+      >
+      <HeaderBar title="상담 메인" />
 
-      <MessageList
-        selectedRequest={selectedRequest}
-        messages={messages}
-        inputMessage={inputMessage}
-        setInputMessage={setInputMessage}
-        sendMessage={sendMessage}
-        endConsultation={endConsultation}
-        messagesEndRef={messagesEndRef}
-      />
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            display: "grid",
+            gridTemplateColumns: "300px minmax(460px, 1fr) 320px",
+            gap: "12px",
+          }}
+        >
+          <div
+            style={{
+              background: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "12px",
+              boxShadow: "0 4px 18px rgba(0,0,0,0.04)",
+              overflow: "hidden",
+              display: "flex",
+            }}
+          >
+            <CustListBar
+              consultationRequests={consultationRequests}
+              consultationHistory={consultationHistory}
+              selectedRequest={selectedRequest}
+              onClickRequest={handleRequestClick}
+            />
+          </div>
 
-      <CustDetailBar
-        selectedRequest={selectedRequest}
-        consultationHistory={consultationHistory}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+          <div
+            style={{
+              background: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "12px",
+              boxShadow: "0 4px 18px rgba(0,0,0,0.04)",
+              overflow: "hidden",
+              display: "flex",
+            }}
+          >
+            <MessageList
+              selectedRequest={selectedRequest}
+              messages={messages}
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              sendMessage={sendMessage}
+              endConsultation={endConsultation}
+              messagesEndRef={messagesEndRef}
+            />
+          </div>
+
+          <div
+            style={{
+              background: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "12px",
+              boxShadow: "0 4px 18px rgba(0,0,0,0.04)",
+              overflow: "hidden",
+              display: "flex",
+            }}
+          >
+            <CustDetailBar
+              selectedRequest={selectedRequest}
+              consultationHistory={consultationHistory}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
