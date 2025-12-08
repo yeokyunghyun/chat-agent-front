@@ -1,17 +1,10 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import {
-  type ChatState,
-  type Message,
-  type ConsultationRequest,
-  type ConsultationHistory
-} from "@/types/chat";
+import { type ChatState, type Message, type ConsultationRequest } from "@/types/chat";
 
 const initialState: ChatState = {
   messages: [],
   selectedRequest: null,
   consultationRequests: [],
-  consultationHistory: [],
-  activeTab: "history",
 };
 
 const chatSlice = createSlice({
@@ -34,15 +27,6 @@ const chatSlice = createSlice({
       state.consultationRequests = action.payload;
     },
 
-    // 상담 내역 전체 세팅
-    setConsultationHistory(state, action: PayloadAction<ConsultationHistory[]>) {
-      state.consultationHistory = action.payload;
-    },
-
-    // 탭 상태 변경
-    setActiveTab(state, action: PayloadAction<"history" | "info">) {
-      state.activeTab = action.payload;
-    },
   }
 });
 
@@ -50,8 +34,6 @@ export const {
   setSelectedRequest,
   addMessage,
   setConsultationRequests,
-  setConsultationHistory,
-  setActiveTab
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

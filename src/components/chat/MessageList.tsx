@@ -1,4 +1,7 @@
-import { type Message, type ConsultationRequest } from '@/types';
+import { useState } from "react";
+
+import ConfirmModal from "@/components/common/ConfirmModal";
+import { type Message, type ConsultationRequest } from "@/types";
 
 interface Props {
   selectedRequest: ConsultationRequest | null;
@@ -6,7 +9,7 @@ interface Props {
   inputMessage: string;
   setInputMessage: (v: string) => void;
   sendMessage: () => void;
-  endConsultation: () => void;
+  onConfirmEnd?: () => void;
   messagesEndRef: any;
 }
 
@@ -16,9 +19,20 @@ export default function MessageList({
   inputMessage,
   setInputMessage,
   sendMessage,
-  endConsultation,
+  onConfirmEnd,
   messagesEndRef,
 }: Props) {
+  const [isEndConfirmOpen, setIsEndConfirmOpen] = useState(false);
+
+  const handleClickEnd = () => setIsEndConfirmOpen(true);
+
+  const handleConfirmEnd = () => {
+    onConfirmEnd?.();
+    setIsEndConfirmOpen(false);
+  };
+
+  const handleCancelEnd = () => setIsEndConfirmOpen(false);
+
   return (
     <div
       style={{
@@ -45,31 +59,18 @@ export default function MessageList({
           {/* 헤더 */}
           <div
             style={{
-              padding: "16px",
+              padding: "10px 14px",
               borderBottom: "1px solid #ddd",
               display: "flex",
               justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            <div>
-              <h3>{selectedRequest.customerName}님과의 상담</h3>
-              <div style={{ fontSize: "12px", color: "#666" }}>
-                고객 ID: {selectedRequest.customerId}
-              </div>
+            <div style={{ lineHeight: 1.3 }}>
+              <h3 style={{ margin: 0, fontSize: "16px" }}>
+                {selectedRequest.customerName}({selectedRequest.customerId})님과의 상담
+              </h3>
             </div>
-            <button
-              onClick={endConsultation}
-              style={{
-                padding: "8px 16px",
-                background: "#f44336",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-              }}
-            >
-              상담 종료
-            </button>
           </div>
 
           {/* 메시지 영역 */}
@@ -77,7 +78,7 @@ export default function MessageList({
             style={{
               flex: 1,
               overflowY: "auto",
-              padding: "16px",
+              padding: "12px 14px",
               background: "#f7f7f7",
             }}
           >
@@ -108,14 +109,15 @@ export default function MessageList({
           {/* 입력창 */}
           <div
             style={{
-              padding: "12px",
+              padding: "10px 12px",
               borderTop: "1px solid #ddd",
               display: "flex",
               gap: "8px",
+              alignItems: "center",
             }}
           >
             <input
-              style={{ flex: 1, padding: "10px" }}
+              style={{ flex: 1, padding: "9px 10px", borderRadius: "6px", border: "1px solid #d1d5db" }}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="메시지를 입력하세요..."
@@ -123,16 +125,41 @@ export default function MessageList({
             <button
               onClick={sendMessage}
               style={{
-                padding: "10px 20px",
+                padding: "9px 16px",
                 backgroundColor: "#2196F3",
                 color: "white",
                 border: "none",
                 borderRadius: "6px",
+                fontWeight: 600,
               }}
             >
               전송
             </button>
+            <button
+              onClick={handleClickEnd}
+              style={{
+                padding: "9px 12px",
+                background: "#f44336",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontWeight: 700,
+              }}
+            >
+              상담 종료
+            </button>
           </div>
+
+          <ConfirmModal
+            open={isEndConfirmOpen}
+            title="상담을 종료하시겠습니까?"
+            description="예를 누르면 현재 고객 상담이 종료되고 목록에서 상태가 '상담 종료'로 변경됩니다."
+            confirmText="예"
+            cancelText="아니요"
+            onCancel={handleCancelEnd}
+            onConfirm={handleConfirmEnd}
+          />
         </>
       )}
     </div>

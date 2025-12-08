@@ -6,11 +6,7 @@ import CustListBar from "@/components/chat/CustListBar"
 import MessageList from '@/components/chat/MessageList'
 import CustDetailBar from '@/components/chat/CustDetailBar'
 
-import {
-  type Message,
-  type ConsultationRequest,
-  type ConsultationHistory,
-} from "@/types/chat";
+import { type Message, type ConsultationRequest } from "@/types/chat";
 import HeaderBar from "@/components/common/HeaderBar";
 
 export default function AgentPage() {
@@ -18,10 +14,9 @@ export default function AgentPage() {
   const [inputMessage, setInputMessage] = useState("");
   const [selectedRequest, setSelectedRequest] = useState<ConsultationRequest | null>(null);
   const [consultationRequests, setConsultationRequests] = useState<ConsultationRequest[]>([]);
-  const [consultationHistory, setConsultationHistory] = useState<ConsultationHistory[]>([]);
-  const [activeTab, setActiveTab] = useState<"history" | "info">("history");
-
+  const [messagesByRequest, setMessagesByRequest] = useState<Record<string, Message[]>>({});
   const clientRef = useRef<any>(null);
+  const selectedRequestRef = useRef<ConsultationRequest | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 자동 스크롤
@@ -47,9 +42,18 @@ export default function AgentPage() {
       });
 
       client.subscribe("/topic/agent", (msg) => {
-        if (selectedRequest) {
-          setMessages((prev) => [...prev, JSON.parse(msg.body)]);
-        }
+        const current = selectedRequestRef.current;
+        if (!current) return;
+
+        const parsed: Message = JSON.parse(msg.body);
+        setMessages((prev) => {
+          const next = [...prev, parsed];
+          setMessagesByRequest((prevMap) => ({
+            ...prevMap,
+            [current.id]: next,
+          }));
+          return next;
+        });
       });
     });
 
@@ -62,19 +66,26 @@ export default function AgentPage() {
         requestTime: new Date().toLocaleString(),
         status: "pending",
       },
-    ]);
-
-    setConsultationHistory([
       {
-        id: "hist1",
+        id: "2",
+        customerId: "customer2",
+        customerName: "김철수",
+        requestTime: new Date().toLocaleString(),
+        status: "in_progress",
+      },
+      {
+        id: "3",
         customerId: "customer3",
         customerName: "이영희",
-        startTime: new Date(Date.now() - 86400000).toLocaleString(),
-        endTime: new Date(Date.now() - 86000000).toLocaleString(),
-        messages: [
-          { userId: "customer3", content: "안녕하세요" },
-          { userId: "agent", content: "네, 안녕하세요" },
-        ],
+        requestTime: new Date().toLocaleString(),
+        status: "post_process",
+      },
+      {
+        id: "4",
+        customerId: "customer4",
+        customerName: "박민수",
+        requestTime: new Date().toLocaleString(),
+        status: "closed",
       },
     ]);
 
@@ -83,10 +94,18 @@ export default function AgentPage() {
     };
   }, []);
 
+  useEffect(() => {
+    selectedRequestRef.current = selectedRequest;
+  }, [selectedRequest]);
+
   // 상담 요청 클릭
   const handleRequestClick = (req: ConsultationRequest) => {
-    setSelectedRequest(req);
-    setMessages([]);
+    const next = { ...req, status: "in_progress" as const };
+    setConsultationRequests((prev) =>
+      prev.map((item) => (item.id === req.id ? next : item))
+    );
+    setSelectedRequest(next);
+    setMessages(messagesByRequest[req.id] ?? []);
   };
 
   // 메시지 전송
@@ -105,25 +124,26 @@ export default function AgentPage() {
       JSON.stringify(msg)
     );
 
-    setMessages((prev) => [...prev, msg]);
+    setMessages((prev) => {
+      const next = [...prev, msg];
+      setMessagesByRequest((prevMap) => ({
+        ...prevMap,
+        [selectedRequest.id]: next,
+      }));
+      return next;
+    });
     setInputMessage("");
   };
 
   // 상담 종료
-  const endConsultation = () => {
+  const confirmEndConsultation = () => {
     if (!selectedRequest) return;
 
-    setConsultationHistory((prev) => [
-      ...prev,
-      {
-        id: `hist_${Date.now()}`,
-        customerId: selectedRequest.customerId,
-        customerName: selectedRequest.customerName,
-        startTime: selectedRequest.requestTime,
-        endTime: new Date().toLocaleString(),
-        messages,
-      },
-    ]);
+    setConsultationRequests((prev) =>
+      prev.map((item) =>
+        item.id === selectedRequest.id ? { ...item, status: "closed" } : item
+      )
+    );
 
     setSelectedRequest(null);
     setMessages([]);
@@ -164,7 +184,6 @@ export default function AgentPage() {
           >
             <CustListBar
               consultationRequests={consultationRequests}
-              consultationHistory={consultationHistory}
               selectedRequest={selectedRequest}
               onClickRequest={handleRequestClick}
             />
@@ -186,7 +205,7 @@ export default function AgentPage() {
               inputMessage={inputMessage}
               setInputMessage={setInputMessage}
               sendMessage={sendMessage}
-              endConsultation={endConsultation}
+              onConfirmEnd={confirmEndConsultation}
               messagesEndRef={messagesEndRef}
             />
           </div>
@@ -203,9 +222,7 @@ export default function AgentPage() {
           >
             <CustDetailBar
               selectedRequest={selectedRequest}
-              consultationHistory={consultationHistory}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
+              messages={messages}
             />
           </div>
         </div>

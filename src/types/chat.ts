@@ -2,8 +2,6 @@ export interface ChatState {
   messages: Message[];
   selectedRequest: ConsultationRequest | null;
   consultationRequests: ConsultationRequest[];
-  consultationHistory: ConsultationHistory[];
-  activeTab: "history" | "info";
 }
 
 export interface Message {
@@ -17,14 +15,5 @@ export interface ConsultationRequest {
   customerId: string;
   customerName: string;
   requestTime: string;
-  status: "pending" | "active" | "completed";
-}
-
-export interface ConsultationHistory {
-  id: string;
-  customerId: string;
-  customerName: string;
-  startTime: string;
-  endTime: string;
-  messages: Message[];
+  status: "pending" | "in_progress" | "post_process" | "closed";
 }
