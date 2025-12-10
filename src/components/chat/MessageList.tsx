@@ -120,6 +120,12 @@ export default function MessageList({
               style={{ flex: 1, padding: "9px 10px", borderRadius: "6px", border: "1px solid #d1d5db" }}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
               placeholder="메시지를 입력하세요..."
             />
             <button

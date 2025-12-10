@@ -6,6 +6,7 @@ export interface ChatState {
 
 export interface Message {
   userId: string;
+  customerId: string;
   content: string;
   timestamp?: string;
 }

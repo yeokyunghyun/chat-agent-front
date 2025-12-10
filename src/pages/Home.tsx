@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux'
 import { login } from '@/slices/auth'
@@ -10,6 +10,7 @@ export default function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch()
   const auth = useSelector(getAuth);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
   // 로그인 성공 시 상담 페이지로 이동
   useEffect(() => {
@@ -28,6 +29,19 @@ export default function Login() {
     navigate("/register");
   };
 
+  // 엔터키 처리
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      if (e.currentTarget.placeholder === "아이디") {
+        // 아이디 필드에서 엔터키를 누르면 비밀번호 필드로 포커스 이동
+        passwordInputRef.current?.focus();
+      } else {
+        // 비밀번호 필드에서 엔터키를 누르면 로그인 시도
+        loginUser();
+      }
+    }
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.box}>
@@ -38,14 +52,17 @@ export default function Login() {
           placeholder="아이디"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          onKeyPress={handleKeyPress}
         />
 
         <input
+          ref={passwordInputRef}
           style={styles.input}
           placeholder="비밀번호"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyPress={handleKeyPress}
         />
 
         <button style={styles.button} onClick={loginUser}>

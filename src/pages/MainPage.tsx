@@ -17,6 +17,7 @@ export default function AgentPage() {
   const [messagesByRequest, setMessagesByRequest] = useState<Record<string, Message[]>>({});
   const clientRef = useRef<any>(null);
   const selectedRequestRef = useRef<ConsultationRequest | null>(null);
+  const messageSubsRef = useRef<Record<string, any>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 자동 스크롤
@@ -38,55 +39,42 @@ export default function AgentPage() {
     client.connect({}, () => {
       client.subscribe("/topic/agent/requests", (msg) => {
         const req: ConsultationRequest = JSON.parse(msg.body);
+        console.log("### req >>> :", req);
+        
         setConsultationRequests((prev) => [req, ...prev]);
-      });
-
-      client.subscribe("/topic/agent", (msg) => {
-        const current = selectedRequestRef.current;
-        if (!current) return;
-
-        const parsed: Message = JSON.parse(msg.body);
-        setMessages((prev) => {
-          const next = [...prev, parsed];
-          setMessagesByRequest((prevMap) => ({
-            ...prevMap,
-            [current.id]: next,
-          }));
-          return next;
-        });
       });
     });
 
     // 더미 데이터
     setConsultationRequests([
-      {
-        id: "1",
-        customerId: "customer1",
-        customerName: "홍길동",
-        requestTime: new Date().toLocaleString(),
-        status: "pending",
-      },
-      {
-        id: "2",
-        customerId: "customer2",
-        customerName: "김철수",
-        requestTime: new Date().toLocaleString(),
-        status: "in_progress",
-      },
-      {
-        id: "3",
-        customerId: "customer3",
-        customerName: "이영희",
-        requestTime: new Date().toLocaleString(),
-        status: "post_process",
-      },
-      {
-        id: "4",
-        customerId: "customer4",
-        customerName: "박민수",
-        requestTime: new Date().toLocaleString(),
-        status: "closed",
-      },
+      // {
+      //   id: "1",
+      //   customerId: "customer1",
+      //   customerName: "홍길동",
+      //   requestTime: new Date().toLocaleString(),
+      //   status: "pending",
+      // },
+      // {
+      //   id: "2",
+      //   customerId: "customer2",
+      //   customerName: "김철수",
+      //   requestTime: new Date().toLocaleString(),
+      //   status: "in_progress",
+      // },
+      // {
+      //   id: "3",
+      //   customerId: "customer3",
+      //   customerName: "이영희",
+      //   requestTime: new Date().toLocaleString(),
+      //   status: "post_process",
+      // },
+      // {
+      //   id: "4",
+      //   customerId: "customer4",
+      //   customerName: "박민수",
+      //   requestTime: new Date().toLocaleString(),
+      //   status: "closed",
+      // },
     ]);
 
     return () => {
@@ -97,6 +85,44 @@ export default function AgentPage() {
   useEffect(() => {
     selectedRequestRef.current = selectedRequest;
   }, [selectedRequest]);
+
+  // 고객별 토픽 다중 구독 (상담 목록에 있는 모든 고객)
+  useEffect(() => {
+    const client = clientRef.current;
+    if (!client || !client.connected) return;
+
+    const subs = messageSubsRef.current;
+
+    consultationRequests.forEach((req) => {
+      const topic = `/topic/agent/${req.customerId}`;
+      if (subs[topic]) return; // 이미 구독 중
+
+      subs[topic] = client.subscribe(topic, (msg: any) => {
+        const parsed: Message = JSON.parse(msg.body);
+
+        setMessagesByRequest((prevMap) => {
+          const prevList = prevMap[req.id] ?? [];
+          const next = [...prevList, parsed];
+
+          // 현재 보고 있는 상담이면 실시간으로 화면에도 반영
+          if (selectedRequestRef.current?.id === req.id) {
+            setMessages(next);
+          }
+
+          return {
+            ...prevMap,
+            [req.id]: next,
+          };
+        });
+      });
+    });
+
+    return () => {
+      Object.values(subs).forEach((sub) => sub?.unsubscribe?.());
+      messageSubsRef.current = {};
+    };
+  }, [consultationRequests]);
+  
 
   // 상담 요청 클릭
   const handleRequestClick = (req: ConsultationRequest) => {
@@ -109,29 +135,31 @@ export default function AgentPage() {
   };
 
   // 메시지 전송
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!selectedRequest || !inputMessage.trim()) return;
 
     const msg: Message = {
       userId: "agent",
+      customerId: selectedRequest.customerId,
       content: inputMessage,
       timestamp: new Date().toISOString(),
     };
 
-    clientRef.current.send(
-      `/app/chat/${selectedRequest.customerId}`,
-      {},
-      JSON.stringify(msg)
-    );
-
-    setMessages((prev) => {
-      const next = [...prev, msg];
-      setMessagesByRequest((prevMap) => ({
-        ...prevMap,
-        [selectedRequest.id]: next,
-      }));
-      return next;
+    await fetch("http://localhost:8443/api/agent/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(msg),
     });
+    
+    setMessages((prev) => [...prev, msg]);
+
+    setMessagesByRequest((prevMap) => ({
+      ...prevMap,
+      [selectedRequest.id]: [...(prevMap[selectedRequest.id] ?? []), msg],
+    }));
+
     setInputMessage("");
   };
 
