@@ -15,7 +15,7 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
 
   return (
     <section style={panelStyle}>
-      <PanelHeader title="선택한 유형 미리보기" />
+      {/* <PanelHeader title="선택한 유형 미리보기" /> */}
       <div
         style={{
           marginTop: "8px",
@@ -31,8 +31,10 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
             <InfoCard label="이름" value={selectedNode.label} />
             <InfoCard label="Depth" value={`${depth} Depth`} />
             <InfoCard label="전체 경로" value={currentTitle} />
+            
             <div
               style={{
+                marginTop: "30px",
                 border: "1px dashed #d1d5db",
                 borderRadius: "12px",
                 padding: "16px",
@@ -42,7 +44,7 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
                 gap: "12px",
               }}
             >
-              <div style={{ fontWeight: 700 }}>선택한 유형 화면 예시</div>
+
               <div
                 style={{
                   minHeight: "140px",
@@ -59,9 +61,6 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
                 {selectedNode.label} 화면입니다. 안내 문구나 상세 내용을 여기에 표시하세요.
               </div>
               <div>
-                <div style={{ fontWeight: 600, marginBottom: "8px", color: "#4b5563" }}>
-                  퀵버튼 (최대 3개씩 한 줄)
-                </div>
                 {quickActions.length ? (
                   <div
                     style={{

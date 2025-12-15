@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import EditorPanel from "../components/inquiry/EditorPanel";
 import PreviewPanel from "../components/inquiry/PreviewPanel";
 import TreePanel from "../components/inquiry/TreePanel";
@@ -64,13 +64,28 @@ const initialTree: TreeNode[] = [
 ];
 
 export default function InquiryTypePage() {
-  const [tree, setTree] = useState<TreeNode[]>(initialTree);
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(
-    () => new Set(initialTree.map((node) => node.id))
-  );
-  const [selectedId, setSelectedId] = useState<string>(initialTree[0].id);
+  const [tree, setTree] = useState<TreeNode[]>([]);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+  const [selectedId, setSelectedId] = useState<string>("");
+
   const [newChildLabel, setNewChildLabel] = useState("새 하위 문의 유형");
   const [renameValue, setRenameValue] = useState("");
+
+  useEffect(() => {
+    async function loadTree() {
+      const res = await fetch("/api/select/inquiryTypeTree");
+      const data: TreeNode[] = await res.json();
+
+      setTree(data);
+      
+      setExpandedIds(new Set(data.map((n) => n.id)));
+
+      if (data.length > 0) {
+        setSelectedId(data[0].id);
+      }
+    }
+    loadTree();
+  }, []);
 
   const { selectedNode, path } = useMemo(() => {
     const findNode = (
@@ -139,25 +154,25 @@ export default function InquiryTypePage() {
       >
       <HeaderBar
         title="문의 유형 관리"
-        rightContent={
-          selectedNode && (
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 10px",
-                background: "#eef2ff",
-                borderRadius: "10px",
-                color: "#4338ca",
-                fontWeight: 600,
-                fontSize: "13px",
-              }}
-            >
-              현재 선택: {currentTitle}
-            </div>
-          )
-        }
+        // rightContent={
+        //   selectedNode && (
+        //     <div
+        //       style={{
+        //         display: "inline-flex",
+        //         alignItems: "center",
+        //         gap: "6px",
+        //         padding: "8px 10px",
+        //         background: "#eef2ff",
+        //         borderRadius: "10px",
+        //         color: "#4338ca",
+        //         fontWeight: 600,
+        //         fontSize: "13px",
+        //       }}
+        //     >
+        //       현재 선택: {currentTitle}
+        //     </div>
+        //   )
+        // }
       />
 
 
