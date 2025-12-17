@@ -1,7 +1,7 @@
 import EmptyState from "./EmptyState";
 import PanelHeader from "./PanelHeader";
 import { panelStyle } from "./styles";
-import type { TreeNode } from "./types";
+import type { TreeNode } from "@/types/inqry"; 
 
 type TreePanelProps = {
   tree: TreeNode[];
@@ -9,6 +9,7 @@ type TreePanelProps = {
   expandedIds: Set<string>;
   onSelect: (id: string) => void;
   onToggle: (id: string) => void;
+  setRenameValue: (value: string) => void;
 };
 
 export default function TreePanel({
@@ -17,6 +18,7 @@ export default function TreePanel({
   expandedIds,
   onSelect,
   onToggle,
+  setRenameValue
 }: TreePanelProps) {
   return (
     <section style={panelStyle}>
@@ -39,6 +41,7 @@ export default function TreePanel({
               expandedIds={expandedIds}
               onSelect={onSelect}
               onToggle={onToggle}
+              setRenameValue={setRenameValue}
             />
           ))
         ) : (
@@ -56,6 +59,7 @@ type TreeRowProps = {
   expandedIds: Set<string>;
   onSelect: (id: string) => void;
   onToggle: (id: string) => void;
+  setRenameValue: (value: string) => void;
 };
 
 function TreeRow({
@@ -65,6 +69,7 @@ function TreeRow({
   expandedIds,
   onSelect,
   onToggle,
+  setRenameValue
 }: TreeRowProps) {
   const hasChildren = !!node.children?.length;
   const expanded = expandedIds.has(node.id);
@@ -84,7 +89,11 @@ function TreeRow({
           marginLeft: `${(depth - 1) * 14}px`,
           transition: "background-color 120ms ease, color 120ms ease",
         }}
-        onClick={() => onSelect(node.id)}
+        onClick={() => {
+          console.log("???????????????", node);
+          onSelect(node.id);
+          setRenameValue(node.title);
+        }}
         onMouseEnter={(e) => {
           if (selectedId !== node.id) {
             e.currentTarget.style.backgroundColor = "#f3f4f6";
@@ -99,6 +108,7 @@ function TreeRow({
         {hasChildren ? (
           <button
             onClick={(e) => {
+              console.log("onClick@@@", node.id);
               e.stopPropagation();
               onToggle(node.id);
             }}
@@ -120,7 +130,7 @@ function TreeRow({
         ) : (
           <span style={{ width: "22px" }} />
         )}
-        <div style={{ fontWeight: 600, fontSize: "14px" }}>{node.label}</div>
+        <div style={{ fontWeight: 600, fontSize: "14px" }}>{node.title}</div>
       </div>
 
       {hasChildren && expanded && (
@@ -134,6 +144,7 @@ function TreeRow({
               expandedIds={expandedIds}
               onSelect={onSelect}
               onToggle={onToggle}
+              setRenameValue={setRenameValue}
             />
           ))}
         </div>

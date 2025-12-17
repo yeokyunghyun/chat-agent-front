@@ -2,66 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import EditorPanel from "../components/inquiry/EditorPanel";
 import PreviewPanel from "../components/inquiry/PreviewPanel";
 import TreePanel from "../components/inquiry/TreePanel";
-import type { TreeNode } from "../components/inquiry/types";
+import type { TreeNode } from "@/types/inqry";
 import HeaderBar from "@/components/common/HeaderBar";
-
-const initialTree: TreeNode[] = [
-  {
-    id: "type-order",
-    label: "주문/결제",
-    children: [
-      {
-        id: "type-order-payment",
-        label: "결제 오류",
-        children: [
-          { id: "type-order-payment-card", label: "카드 결제 실패" },
-          { id: "type-order-payment-transfer", label: "계좌 이체 지연" },
-        ],
-      },
-      {
-        id: "type-order-receipt",
-        label: "영수증/세금계산서",
-        children: [
-          { id: "type-order-receipt-issue", label: "발급 요청" },
-          { id: "type-order-receipt-modify", label: "정보 수정" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "type-shipping",
-    label: "배송",
-    children: [
-      {
-        id: "type-shipping-delay",
-        label: "지연/미도착",
-        children: [
-          { id: "type-shipping-delay-track", label: "배송 추적 안 됨" },
-          { id: "type-shipping-delay-long", label: "예상일 초과" },
-        ],
-      },
-      {
-        id: "type-shipping-change",
-        label: "주소 변경",
-        children: [{ id: "type-shipping-change-request", label: "변경 요청" }],
-      },
-    ],
-  },
-  {
-    id: "type-refund",
-    label: "취소/환불",
-    children: [
-      {
-        id: "type-refund-progress",
-        label: "진행 상황 문의",
-        children: [
-          { id: "type-refund-progress-status", label: "환불 상태" },
-          { id: "type-refund-progress-term", label: "소요 기간" },
-        ],
-      },
-    ],
-  },
-];
 
 export default function InquiryTypePage() {
   const [tree, setTree] = useState<TreeNode[]>([]);
@@ -69,21 +11,25 @@ export default function InquiryTypePage() {
   const [selectedId, setSelectedId] = useState<string>("");
 
   const [newChildLabel, setNewChildLabel] = useState("새 하위 문의 유형");
-  const [renameValue, setRenameValue] = useState("");
+  const [newRootLabel, setNewRootLabel] = useState("새 최상위 문의 유형");
+  const [renameValue, setRenameValue] = useState<string>("");
+
+  const loadTree = async () => {
+    const res = await fetch("/api/select/inquiryTypeTree");
+    const data: TreeNode[] = await res.json();
+
+    setTree(data);
+    
+    setExpandedIds(new Set(data.map((n) => n.id)));
+
+    if (data.length > 0) {
+      setSelectedId(data[0].id);
+    } else {
+      setSelectedId("");
+    }
+  };
 
   useEffect(() => {
-    async function loadTree() {
-      const res = await fetch("/api/select/inquiryTypeTree");
-      const data: TreeNode[] = await res.json();
-
-      setTree(data);
-      
-      setExpandedIds(new Set(data.map((n) => n.id)));
-
-      if (data.length > 0) {
-        setSelectedId(data[0].id);
-      }
-    }
     loadTree();
   }, []);
 
@@ -115,24 +61,101 @@ export default function InquiryTypePage() {
     });
   };
 
-  const addChildToNode = () => {
-    if (!selectedNode || path.length !== 1 || !newChildLabel.trim()) return;
-    const targetId = selectedNode.id;
-    const updated = tree.map((node) => addChild(node, targetId, newChildLabel));
-    setTree(updated);
-    setNewChildLabel("새 하위 문의 유형");
-    setExpandedIds((prev) => new Set([...prev, targetId]));
+  const addChildToNode = async () => {
+    console.log('>>> addChildToNode');
+    console.log('>>> newChildLabel.trim() >>>', newChildLabel.trim());
+    
+    if (!selectedNode || path.length !== 1 || !newChildLabel.trim()) {
+      alert("문의유형 이름을 입력해주세요.");
+      return;
+    }
+
+    try {
+      
+      const res = await fetch("/api/insert/inquiryType", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          parentId: selectedNode.id,
+          title: newChildLabel.trim(),
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("문의 유형 추가에 실패했습니다.");
+      }
+
+      setNewChildLabel("새 하위 문의 유형");
+      await loadTree();
+      
+      if (selectedNode) {
+        setExpandedIds((prev) => new Set([...prev, selectedNode.id]));
+      }
+    } catch (error) {
+      console.error("Error adding child node:", error);
+      alert("문의 유형 추가 중 오류가 발생했습니다.");
+    }
   };
 
-  const renameSelected = () => {
+  const addRootNode = async () => {
+    console.log('>>> addRootNode');
+    console.log('>>> newRootLabel >>>', newRootLabel.trim());
+    
+    if (!newRootLabel.trim()) {
+      alert("문의유형 이름을 입력해주세요.");
+      return;
+    }
+    
+    try {
+      const res = await fetch("/api/insert/inquiryType", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          parentId: null,
+          title: newRootLabel.trim(),
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("최상위 문의 유형 추가에 실패했습니다.");
+      }
+
+      setNewRootLabel("새 최상위 문의 유형");
+      await loadTree();
+    } catch (error) {
+      console.error("Error adding root node:", error);
+      alert("최상위 문의 유형 추가 중 오류가 발생했습니다.");
+    }
+  };
+
+  const renameSelected = async () => {
     if (!selectedNode || !renameValue.trim()) return;
-    const updated = tree.map((node) => renameNode(node, selectedId, renameValue));
-    setTree(updated);
+    
+      const res = await fetch("/api/update/inquiryTypeName", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: selectedNode.id,
+          title: renameValue,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("이름 변경에 실패하셨습니다.");
+      }
+
+    await loadTree();
     setRenameValue("");
   };
 
   const depth = path.length;
-  const currentTitle = path.map((n) => n.label).join(" / ");
+  const currentTitle = path.map((n) => n.title).join(" / ");
 
   return (
     <div
@@ -191,6 +214,7 @@ export default function InquiryTypePage() {
             expandedIds={expandedIds}
             onSelect={setSelectedId}
             onToggle={toggleExpand}
+            setRenameValue={setRenameValue}
           />
           <PreviewPanel selectedNode={selectedNode} depth={depth} currentTitle={currentTitle} />
           <EditorPanel
@@ -203,6 +227,10 @@ export default function InquiryTypePage() {
             newChildLabel={newChildLabel}
             onNewChildChange={setNewChildLabel}
             onAddChild={addChildToNode}
+            newRootLabel={newRootLabel}
+            onNewRootChange={setNewRootLabel}
+            onAddRoot={addRootNode}
+            isEmpty={tree.length === 0}
           />
         </div>
       </div>
@@ -210,11 +238,11 @@ export default function InquiryTypePage() {
   );
 }
 
-function addChild(node: TreeNode, targetId: string, label: string): TreeNode {
+function addChild(node: TreeNode, targetId: string, title: string): TreeNode {
   if (node.id === targetId) {
     const nextChild: TreeNode = {
       id: `${node.id}-${(node.children?.length || 0) + 1}`,
-      label,
+      title,
     };
     return {
       ...node,
@@ -224,15 +252,15 @@ function addChild(node: TreeNode, targetId: string, label: string): TreeNode {
   if (!node.children) return node;
   return {
     ...node,
-    children: node.children.map((child) => addChild(child, targetId, label)),
+    children: node.children.map((child) => addChild(child, targetId, title)),
   };
 }
 
-function renameNode(node: TreeNode, targetId: string, label: string): TreeNode {
-  if (node.id === targetId) return { ...node, label };
+function renameNode(node: TreeNode, targetId: string, title: string): TreeNode {
+  if (node.id === targetId) return { ...node, title };
   if (!node.children) return node;
   return {
     ...node,
-    children: node.children.map((child) => renameNode(child, targetId, label)),
+    children: node.children.map((child) => renameNode(child, targetId, title)),
   };
 }

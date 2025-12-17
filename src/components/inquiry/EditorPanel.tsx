@@ -1,7 +1,7 @@
 import EmptyState from "./EmptyState";
 import PanelHeader from "./PanelHeader";
 import { inputStyle, panelStyle, primaryButton, secondaryButton } from "./styles";
-import type { TreeNode } from "./types";
+import type { TreeNode } from "@/types/inqry";
 
 type EditorPanelProps = {
   selectedNode: TreeNode | null;
@@ -13,6 +13,10 @@ type EditorPanelProps = {
   newChildLabel: string;
   onNewChildChange: (value: string) => void;
   onAddChild: () => void;
+  newRootLabel: string;
+  onNewRootChange: (value: string) => void;
+  onAddRoot: () => void;
+  isEmpty: boolean;
 };
 
 export default function EditorPanel({
@@ -25,6 +29,10 @@ export default function EditorPanel({
   newChildLabel,
   onNewChildChange,
   onAddChild,
+  newRootLabel,
+  onNewRootChange,
+  onAddRoot,
+  isEmpty,
 }: EditorPanelProps) {
   return (
     <section style={panelStyle}>
@@ -94,6 +102,43 @@ export default function EditorPanel({
               </button>
             </div>
           )}
+        </div>
+      ) : isEmpty ? (
+        <div
+          style={{
+            marginTop: "10px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+            flex: 1,
+            minHeight: 0,
+          }}
+        >
+          <div
+            style={{
+              padding: "14px",
+              border: "1px solid #e5e7eb",
+              borderRadius: "10px",
+              background: "#f8fafc",
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+            }}
+          >
+            <div style={{ fontWeight: 700 }}>최상위 문의 유형 추가</div>
+            <div style={{ fontSize: "13px", color: "#6b7280" }}>
+              등록된 문의 유형이 없습니다. 최상위 문의 유형을 추가해주세요.
+            </div>
+            <input
+              value={newRootLabel}
+              onChange={(e) => onNewRootChange(e.target.value)}
+              placeholder="추가할 최상위 문의 유형 이름"
+              style={inputStyle}
+            />
+            <button style={primaryButton} onClick={onAddRoot}>
+              최상위 문의 유형 추가
+            </button>
+          </div>
         </div>
       ) : (
         <EmptyState text="좌측에서 수정할 유형을 선택하세요." />

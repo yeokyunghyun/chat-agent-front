@@ -22,6 +22,7 @@ export default function Login() {
 
   // 로그인 버튼 클릭 시 로그인 액션 디스패치
   const loginUser = () => {
+    localStorage.setItem("username", username);
     dispatch(login({username, password}));
   }
 

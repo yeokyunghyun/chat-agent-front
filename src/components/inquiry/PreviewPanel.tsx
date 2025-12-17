@@ -28,7 +28,7 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
       >
         {selectedNode ? (
           <>
-            <InfoCard label="이름" value={selectedNode.label} />
+            <InfoCard label="이름" value={selectedNode.title} />
             <InfoCard label="Depth" value={`${depth} Depth`} />
             <InfoCard label="전체 경로" value={currentTitle} />
             
@@ -58,7 +58,7 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
                   fontWeight: 600,
                 }}
               >
-                {selectedNode.label} 화면입니다. 안내 문구나 상세 내용을 여기에 표시하세요.
+                {selectedNode.title} 화면입니다. 안내 문구나 상세 내용을 여기에 표시하세요.
               </div>
               <div>
                 {quickActions.length ? (
@@ -83,7 +83,7 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
                           textAlign: "center",
                         }}
                       >
-                        {child.label}
+                        {child.title}
                       </button>
                     ))}
                   </div>
