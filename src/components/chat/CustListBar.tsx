@@ -5,12 +5,16 @@ interface Props {
   consultationRequests: ConsultationRequest[];
   selectedRequest: ConsultationRequest | null;
   onClickRequest: (req: ConsultationRequest) => void;
+  chatStatus: "READY" | "NOT_READY";
+  onChatStatusChange: (status: "READY" | "NOT_READY") => void;
 }
 
 export default function CustListBar({
   consultationRequests,
   selectedRequest,
   onClickRequest,
+  chatStatus,
+  onChatStatusChange,
 }: Props) {
   const statusFilters = [
     { value: "pending", label: "상담 요청" },
@@ -44,15 +48,45 @@ export default function CustListBar({
         flexDirection: "column",
       }}
     >
-      <h3
+      <div
         style={{
           padding: "12px 16px 8px 16px",
           margin: 0,
           borderBottom: "2px solid #2196F3",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
         }}
       >
-        상담 요청
-      </h3>
+        <h3 style={{ margin: 0 }}>상담 요청</h3>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <span
+            style={{
+              width: "10px",
+              height: "10px",
+              borderRadius: "50%",
+              background: chatStatus === "READY" ? "#22c55e" : "#ef4444",
+            }}
+          />
+          <select
+            value={chatStatus}
+            onChange={(e) => onChatStatusChange(e.target.value as "READY" | "NOT_READY")}
+            style={{
+              padding: "4px 8px",
+              borderRadius: "6px",
+              border: "1px solid #ddd",
+              fontSize: "12px",
+              fontWeight: 600,
+              cursor: "pointer",
+              background: chatStatus === "READY" ? "#dcfce7" : "#fee2e2",
+              color: chatStatus === "READY" ? "#166534" : "#991b1b",
+            }}
+          >
+            <option value="READY">채팅 ON</option>
+            <option value="NOT_READY">채팅 OFF</option>
+          </select>
+        </div>
+      </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "10px" }}>
         {filteredRequests.map((req) => (

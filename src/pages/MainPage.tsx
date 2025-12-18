@@ -15,10 +15,43 @@ export default function AgentPage() {
   const [selectedRequest, setSelectedRequest] = useState<ConsultationRequest | null>(null);
   const [consultationRequests, setConsultationRequests] = useState<ConsultationRequest[]>([]);
   const [messagesByRequest, setMessagesByRequest] = useState<Record<string, Message[]>>({});
+  const [chatStatus, setChatStatus] = useState<"READY" | "NOT_READY">("NOT_READY");
   const clientRef = useRef<any>(null);
   const selectedRequestRef = useRef<ConsultationRequest | null>(null);
   const messageSubsRef = useRef<Record<string, any>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const accessToken = localStorage.getItem("ACCESS_TOKEN");
+
+  // 초기 상태 조회
+  useEffect(() => {
+    fetch("/api/stat/select", { 
+      method: "POST",
+      headers: { 
+        "Authorization": `Bearer ${accessToken}`,
+      },
+    })
+      .then((res) => res.text())
+      .then((status) => {
+        if (status === "READY" || status === "NOT_READY") {
+          setChatStatus(status);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  const handleChatStatusChange = (newStatus: "READY" | "NOT_READY") => {
+    setChatStatus(newStatus);
+    // 필요시 서버에 상태 변경 요청
+    fetch("/api/stat/update", { 
+      method: "POST", 
+      headers: { 
+        "Content-Type" : "application/json",
+        "Authorization": `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ status : newStatus }),
+    });
+  };
 
   // 자동 스크롤
   useEffect(() => {
@@ -135,8 +168,9 @@ export default function AgentPage() {
   };
 
   // 메시지 전송
-  const sendMessage = async () => {
+  const sendMessage = () => {
     if (!selectedRequest || !inputMessage.trim()) return;
+    if (!clientRef.current?.connected) return;
 
     const msg: Message = {
       userId: "agent",
@@ -145,13 +179,7 @@ export default function AgentPage() {
       timestamp: new Date().toISOString(),
     };
 
-    await fetch("http://localhost:8443/api/agent/send", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(msg),
-    });
+    clientRef.current.send("/app/agent/send", {}, JSON.stringify(msg));
     
     setMessages((prev) => [...prev, msg]);
 
@@ -214,6 +242,8 @@ export default function AgentPage() {
               consultationRequests={consultationRequests}
               selectedRequest={selectedRequest}
               onClickRequest={handleRequestClick}
+              chatStatus={chatStatus}
+              onChatStatusChange={handleChatStatusChange}
             />
           </div>
 
