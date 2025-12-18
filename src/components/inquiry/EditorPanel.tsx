@@ -78,7 +78,7 @@ export default function EditorPanel({
             </button>
           </div>
 
-          {depth === 1 && (
+          {(depth === 1 || depth === 2) && (
             <div
               style={{
                 padding: "14px",

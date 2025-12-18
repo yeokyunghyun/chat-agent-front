@@ -1,16 +1,19 @@
+import type { Dispatch, SetStateAction } from "react";
 import EmptyState from "./EmptyState";
 import InfoCard from "./InfoCard";
 import PanelHeader from "./PanelHeader";
 import { panelStyle } from "./styles";
-import type { TreeNode } from "./types";
+import type { TreeNode } from "@/types/inqry";
 
 type PreviewPanelProps = {
   selectedNode: TreeNode | null;
   depth: number;
   currentTitle: string;
+  onSelect: (id: string) => void;
+  setExpandedIds: Dispatch<SetStateAction<Set<string>>>;
 };
 
-export default function PreviewPanel({ selectedNode, depth, currentTitle }: PreviewPanelProps) {
+export default function PreviewPanel({ selectedNode, depth, currentTitle, onSelect, setExpandedIds }: PreviewPanelProps) {
   const quickActions = selectedNode?.children ?? [];
 
   return (
@@ -58,7 +61,7 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
                   fontWeight: 600,
                 }}
               >
-                {selectedNode.title} 화면입니다. 안내 문구나 상세 내용을 여기에 표시하세요.
+                {selectedNode.title}
               </div>
               <div>
                 {quickActions.length ? (
@@ -71,6 +74,14 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
                   >
                     {quickActions.map((child) => (
                       <button
+                        onClick={() => {
+                          console.log('>>> child >>>', child);
+                          console.log('>>> quickActions >>>', quickActions);
+                          
+                          console.log('>>> >>>',);
+                          
+                          onSelect(child.id);
+                        }}
                         key={child.id}
                         style={{
                           padding: "12px 10px",
@@ -88,7 +99,7 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
                     ))}
                   </div>
                 ) : (
-                  <EmptyState text="하위 퀵버튼이 없습니다. 좌측에서 유형을 선택하거나 추가하세요." />
+                  <EmptyState text="하위 퀵버튼이 존재하지 않습니다." />
                 )}
               </div>
             </div>

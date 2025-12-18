@@ -13,6 +13,7 @@ export default function InquiryTypePage() {
   const [newChildLabel, setNewChildLabel] = useState("새 하위 문의 유형");
   const [newRootLabel, setNewRootLabel] = useState("새 최상위 문의 유형");
   const [renameValue, setRenameValue] = useState<string>("");
+  const [deleteValue, setDeleteValue] = useState<boolean>(false);
 
   const loadTree = async () => {
     const res = await fetch("/api/select/inquiryTypeTree");
@@ -20,18 +21,37 @@ export default function InquiryTypePage() {
 
     setTree(data);
     
-    setExpandedIds(new Set(data.map((n) => n.id)));
+    // setExpandedIds(new Set(data.map((n) => n.id)));
 
-    if (data.length > 0) {
-      setSelectedId(data[0].id);
-    } else {
-      setSelectedId("");
-    }
+    // if (data.length > 0) {
+    //   setSelectedId(data[0].id);
+    // } else {
+    //   setSelectedId("");
+    // }
   };
 
   useEffect(() => {
-    loadTree();
+    const init = async () => {
+      await loadTree();
+    };
+    init();
+    
+    if (tree.length > 0) {
+      setSelectedId(tree[0].id);
+    } else {
+      setSelectedId("");
+    }
+    
   }, []);
+
+  useEffect(() => {
+    loadTree();
+    if (tree.length > 0) {
+      setSelectedId(tree[0].id);
+    } else {
+      setSelectedId("");
+    }
+  }, [deleteValue])
 
   const { selectedNode, path } = useMemo(() => {
     const findNode = (
@@ -62,10 +82,7 @@ export default function InquiryTypePage() {
   };
 
   const addChildToNode = async () => {
-    console.log('>>> addChildToNode');
-    console.log('>>> newChildLabel.trim() >>>', newChildLabel.trim());
-    
-    if (!selectedNode || path.length !== 1 || !newChildLabel.trim()) {
+    if (!selectedNode || !newChildLabel.trim()) {
       alert("문의유형 이름을 입력해주세요.");
       return;
     }
@@ -89,7 +106,7 @@ export default function InquiryTypePage() {
 
       setNewChildLabel("새 하위 문의 유형");
       await loadTree();
-      
+      alert("문의 유형이 추가되었습니다.");
       if (selectedNode) {
         setExpandedIds((prev) => new Set([...prev, selectedNode.id]));
       }
@@ -150,8 +167,8 @@ export default function InquiryTypePage() {
         throw new Error("이름 변경에 실패하셨습니다.");
       }
 
+    alert("이름 변경에 성공하셨습니다 !");
     await loadTree();
-    setRenameValue("");
   };
 
   const deleteSelected = async () => {
@@ -162,6 +179,13 @@ export default function InquiryTypePage() {
     if (hasChildren) {
       const confirmed = window.confirm(
         `"${selectedNode.title}"에 하위 문의유형이 있습니다. 정말 삭제하시겠습니까?\n하위 문의유형도 함께 삭제됩니다.`
+      );
+      if (!confirmed) return;
+    }
+
+    else {
+      const confirmed = window.confirm(
+        "해당 문의유형을 삭제하시겠습니까?"
       );
       if (!confirmed) return;
     }
@@ -182,7 +206,8 @@ export default function InquiryTypePage() {
       }
 
       setSelectedId("");
-      await loadTree();
+      
+      setDeleteValue(!deleteValue);
     } catch (error) {
       console.error("Error deleting node:", error);
       alert("문의 유형 삭제 중 오류가 발생했습니다.");
@@ -254,7 +279,13 @@ export default function InquiryTypePage() {
             onDelete={deleteSelected}
             selectedNode={selectedNode}
           />
-          <PreviewPanel selectedNode={selectedNode} depth={depth} currentTitle={currentTitle} />
+          <PreviewPanel 
+            selectedNode={selectedNode} 
+            depth={depth} 
+            currentTitle={currentTitle} 
+            onSelect={setSelectedId} 
+            setExpandedIds={setExpandedIds} 
+          />
           <EditorPanel
             selectedNode={selectedNode}
             depth={depth}

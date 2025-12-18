@@ -63,7 +63,7 @@ export default function TreePanel({
           borderTop: "1px solid #e5e7eb",
         }}
       >
-        <button
+        {/* <button
           onClick={onAddRoot}
           style={{
             flex: 1,
@@ -73,12 +73,12 @@ export default function TreePanel({
             border: "none",
             borderRadius: "8px",
             fontWeight: 600,
-            fontSize: "13px",
+            fontSize: "12px",
             cursor: "pointer",
           }}
         >
           최상위 문의유형 추가
-        </button>
+        </button> */}
         <button
           onClick={onDelete}
           disabled={!selectedNode}
@@ -90,7 +90,7 @@ export default function TreePanel({
             border: "none",
             borderRadius: "8px",
             fontWeight: 600,
-            fontSize: "13px",
+            fontSize: "12px",
             cursor: selectedNode ? "pointer" : "not-allowed",
           }}
         >
@@ -140,6 +140,8 @@ function TreeRow({
         }}
         onClick={() => {
           console.log("???????????????", node);
+          console.log('>>> expandedIds >>>', expandedIds);
+          
           onSelect(node.id);
           setRenameValue(node.title);
         }}
