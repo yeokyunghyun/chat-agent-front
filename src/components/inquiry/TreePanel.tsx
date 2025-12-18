@@ -10,6 +10,9 @@ type TreePanelProps = {
   onSelect: (id: string) => void;
   onToggle: (id: string) => void;
   setRenameValue: (value: string) => void;
+  onAddRoot: () => void;
+  onDelete: () => void;
+  selectedNode: TreeNode | null;
 };
 
 export default function TreePanel({
@@ -18,16 +21,19 @@ export default function TreePanel({
   expandedIds,
   onSelect,
   onToggle,
-  setRenameValue
+  setRenameValue,
+  onAddRoot,
+  onDelete,
+  selectedNode
 }: TreePanelProps) {
   return (
-    <section style={panelStyle}>
+    <section style={{ ...panelStyle, display: "flex", flexDirection: "column" }}>
       <PanelHeader title="문의 유형 트리 (3 Depth)" />
       <div
         style={{
           marginTop: "8px",
           overflow: "auto",
-          height: "100%",
+          flex: 1,
           minHeight: 0,
         }}
       >
@@ -47,6 +53,49 @@ export default function TreePanel({
         ) : (
           <EmptyState text="등록된 유형이 없습니다." />
         )}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          gap: "8px",
+          marginTop: "12px",
+          paddingTop: "12px",
+          borderTop: "1px solid #e5e7eb",
+        }}
+      >
+        <button
+          onClick={onAddRoot}
+          style={{
+            flex: 1,
+            padding: "10px 12px",
+            background: "#4f46e5",
+            color: "#fff",
+            border: "none",
+            borderRadius: "8px",
+            fontWeight: 600,
+            fontSize: "13px",
+            cursor: "pointer",
+          }}
+        >
+          최상위 문의유형 추가
+        </button>
+        <button
+          onClick={onDelete}
+          disabled={!selectedNode}
+          style={{
+            flex: 1,
+            padding: "10px 12px",
+            background: selectedNode ? "#ef4444" : "#d1d5db",
+            color: "#fff",
+            border: "none",
+            borderRadius: "8px",
+            fontWeight: 600,
+            fontSize: "13px",
+            cursor: selectedNode ? "pointer" : "not-allowed",
+          }}
+        >
+          삭제하기
+        </button>
       </div>
     </section>
   );

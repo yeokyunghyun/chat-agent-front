@@ -154,6 +154,41 @@ export default function InquiryTypePage() {
     setRenameValue("");
   };
 
+  const deleteSelected = async () => {
+    if (!selectedNode) return;
+
+    const hasChildren = selectedNode.children && selectedNode.children.length > 0;
+    
+    if (hasChildren) {
+      const confirmed = window.confirm(
+        `"${selectedNode.title}"에 하위 문의유형이 있습니다. 정말 삭제하시겠습니까?\n하위 문의유형도 함께 삭제됩니다.`
+      );
+      if (!confirmed) return;
+    }
+
+    try {
+      const res = await fetch("/api/delete/inquiryType", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: selectedNode.id,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("삭제에 실패했습니다.");
+      }
+
+      setSelectedId("");
+      await loadTree();
+    } catch (error) {
+      console.error("Error deleting node:", error);
+      alert("문의 유형 삭제 중 오류가 발생했습니다.");
+    }
+  };
+
   const depth = path.length;
   const currentTitle = path.map((n) => n.title).join(" / ");
 
@@ -215,6 +250,9 @@ export default function InquiryTypePage() {
             onSelect={setSelectedId}
             onToggle={toggleExpand}
             setRenameValue={setRenameValue}
+            onAddRoot={addRootNode}
+            onDelete={deleteSelected}
+            selectedNode={selectedNode}
           />
           <PreviewPanel selectedNode={selectedNode} depth={depth} currentTitle={currentTitle} />
           <EditorPanel
