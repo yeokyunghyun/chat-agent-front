@@ -39,6 +39,36 @@ export default function CustListBar({
     setEnabledStatus((prev) => ({ ...prev, [value]: !prev[value] }));
   };
 
+  const handleClickRequest = async (req: ConsultationRequest) => {
+
+    onClickRequest(req);
+
+    // 2) 상담 시작 알림 API 호출
+    try {
+      const res = await fetch("/api/agent/start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Authorization: `Bearer ${localStorage.getItem("accessToken") ?? ""}`,
+        },
+        body: JSON.stringify({
+          customerId: req.customerId,
+          customerName: req.customerName,
+          requestTime: req.requestTime,
+          status: req.status,
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        console.error("startConsultation failed:", res.status, text);
+      }
+    } catch (e) {
+      console.error("startConsultation error:", e);
+    }
+
+  };
+
   return (
     <div
       style={{
@@ -91,17 +121,17 @@ export default function CustListBar({
       <div style={{ flex: 1, overflowY: "auto", padding: "10px" }}>
         {filteredRequests.map((req) => (
           <div
-            key={req.id}
+            key={req.customerId}
             style={{
               padding: "12px",
               marginBottom: "10px",
               borderRadius: "8px",
               border: "1px solid #ddd",
               background:
-                selectedRequest?.id === req.id ? "#E3F2FD" : "white",
+                selectedRequest?.customerId === req.customerId ? "#E3F2FD" : "white",
               cursor: "pointer",
             }}
-            onClick={() => onClickRequest(req)}
+            onClick={() => handleClickRequest(req)}
           >
             <div style={{ fontWeight: "bold" }}>{req.customerName}</div>
             <div style={{ fontSize: "12px", color: "#2196F3", marginTop: "4px" }}>

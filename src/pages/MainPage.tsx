@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
 import SockJS from "sockjs-client";
 import Stomp from "stompjs";
 
@@ -8,6 +9,7 @@ import CustDetailBar from '@/components/chat/CustDetailBar'
 
 import { type Message, type ConsultationRequest } from "@/types/chat";
 import HeaderBar from "@/components/common/HeaderBar";
+import { selectAuthUsername } from "@/selectors/auth";
 
 export default function AgentPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -20,6 +22,7 @@ export default function AgentPage() {
   const selectedRequestRef = useRef<ConsultationRequest | null>(null);
   const messageSubsRef = useRef<Record<string, any>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const userName = useSelector(selectAuthUsername);
 
   const accessToken = localStorage.getItem("ACCESS_TOKEN");
 
@@ -68,9 +71,9 @@ export default function AgentPage() {
     const socket = new SockJS("http://localhost:8443/ws");
     const client = Stomp.over(socket);
     clientRef.current = client;
-
+    
     client.connect({}, () => {
-      client.subscribe("/topic/agent/requests", (msg) => {
+      client.subscribe("/topic/agent/requests/" + userName, (msg) => {
         const req: ConsultationRequest = JSON.parse(msg.body);
         console.log("### req >>> :", req);
         
@@ -134,17 +137,17 @@ export default function AgentPage() {
         const parsed: Message = JSON.parse(msg.body);
 
         setMessagesByRequest((prevMap) => {
-          const prevList = prevMap[req.id] ?? [];
+          const prevList = prevMap[req.customerId] ?? [];
           const next = [...prevList, parsed];
 
           // 현재 보고 있는 상담이면 실시간으로 화면에도 반영
-          if (selectedRequestRef.current?.id === req.id) {
+          if (selectedRequestRef.current?.customerId === req.customerId) {
             setMessages(next);
           }
 
           return {
             ...prevMap,
-            [req.id]: next,
+            [req.customerId]: next,
           };
         });
       });
@@ -161,10 +164,10 @@ export default function AgentPage() {
   const handleRequestClick = (req: ConsultationRequest) => {
     const next = { ...req, status: "in_progress" as const };
     setConsultationRequests((prev) =>
-      prev.map((item) => (item.id === req.id ? next : item))
+      prev.map((item) => (item.customerId === req.customerId ? next : item))
     );
     setSelectedRequest(next);
-    setMessages(messagesByRequest[req.id] ?? []);
+    setMessages(messagesByRequest[req.customerId] ?? []);
   };
 
   // 메시지 전송
@@ -173,7 +176,7 @@ export default function AgentPage() {
     if (!clientRef.current?.connected) return;
 
     const msg: Message = {
-      userId: "agent",
+      userId: userName,
       customerId: selectedRequest.customerId,
       content: inputMessage,
       timestamp: new Date().toISOString(),
@@ -185,7 +188,7 @@ export default function AgentPage() {
 
     setMessagesByRequest((prevMap) => ({
       ...prevMap,
-      [selectedRequest.id]: [...(prevMap[selectedRequest.id] ?? []), msg],
+      [selectedRequest.customerId]: [...(prevMap[selectedRequest.customerId] ?? []), msg],
     }));
 
     setInputMessage("");
@@ -197,7 +200,7 @@ export default function AgentPage() {
 
     setConsultationRequests((prev) =>
       prev.map((item) =>
-        item.id === selectedRequest.id ? { ...item, status: "closed" } : item
+        item.customerId === selectedRequest.customerId ? { ...item, status: "closed" } : item
       )
     );
 
@@ -265,6 +268,7 @@ export default function AgentPage() {
               sendMessage={sendMessage}
               onConfirmEnd={confirmEndConsultation}
               messagesEndRef={messagesEndRef}
+              currentUserId={userName || ""}
             />
           </div>
 

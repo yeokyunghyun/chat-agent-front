@@ -12,7 +12,6 @@ export interface Message {
 }
 
 export interface ConsultationRequest {
-  id: string;
   customerId: string;
   customerName: string;
   requestTime: string;
