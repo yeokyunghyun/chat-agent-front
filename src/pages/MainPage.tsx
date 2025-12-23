@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
 import SockJS from "sockjs-client";
 import Stomp from "stompjs";
 
@@ -8,6 +9,7 @@ import CustDetailBar from '@/components/chat/CustDetailBar'
 
 import { type Message, type ConsultationRequest } from "@/types/chat";
 import HeaderBar from "@/components/common/HeaderBar";
+import { selectAuthUsername } from "@/selectors/auth";
 
 export default function AgentPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -15,10 +17,44 @@ export default function AgentPage() {
   const [selectedRequest, setSelectedRequest] = useState<ConsultationRequest | null>(null);
   const [consultationRequests, setConsultationRequests] = useState<ConsultationRequest[]>([]);
   const [messagesByRequest, setMessagesByRequest] = useState<Record<string, Message[]>>({});
+  const [chatStatus, setChatStatus] = useState<"READY" | "NOT_READY">("NOT_READY");
   const clientRef = useRef<any>(null);
   const selectedRequestRef = useRef<ConsultationRequest | null>(null);
   const messageSubsRef = useRef<Record<string, any>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const userName = useSelector(selectAuthUsername);
+
+  const accessToken = localStorage.getItem("ACCESS_TOKEN");
+
+  // 초기 상태 조회
+  useEffect(() => {
+    fetch("/api/stat/select", { 
+      method: "POST",
+      headers: { 
+        "Authorization": `Bearer ${accessToken}`,
+      },
+    })
+      .then((res) => res.text())
+      .then((status) => {
+        if (status === "READY" || status === "NOT_READY") {
+          setChatStatus(status);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  const handleChatStatusChange = (newStatus: "READY" | "NOT_READY") => {
+    setChatStatus(newStatus);
+    // 필요시 서버에 상태 변경 요청
+    fetch("/api/stat/update", { 
+      method: "POST", 
+      headers: { 
+        "Content-Type" : "application/json",
+        "Authorization": `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ status : newStatus }),
+    });
+  };
 
   // 자동 스크롤
   useEffect(() => {
@@ -35,9 +71,9 @@ export default function AgentPage() {
     const socket = new SockJS("http://localhost:8443/ws");
     const client = Stomp.over(socket);
     clientRef.current = client;
-
+    
     client.connect({}, () => {
-      client.subscribe("/topic/agent/requests", (msg) => {
+      client.subscribe("/topic/agent/requests/" + userName, (msg) => {
         const req: ConsultationRequest = JSON.parse(msg.body);
         console.log("### req >>> :", req);
         
@@ -101,17 +137,17 @@ export default function AgentPage() {
         const parsed: Message = JSON.parse(msg.body);
 
         setMessagesByRequest((prevMap) => {
-          const prevList = prevMap[req.id] ?? [];
+          const prevList = prevMap[req.customerId] ?? [];
           const next = [...prevList, parsed];
 
           // 현재 보고 있는 상담이면 실시간으로 화면에도 반영
-          if (selectedRequestRef.current?.id === req.id) {
+          if (selectedRequestRef.current?.customerId === req.customerId) {
             setMessages(next);
           }
 
           return {
             ...prevMap,
-            [req.id]: next,
+            [req.customerId]: next,
           };
         });
       });
@@ -128,36 +164,31 @@ export default function AgentPage() {
   const handleRequestClick = (req: ConsultationRequest) => {
     const next = { ...req, status: "in_progress" as const };
     setConsultationRequests((prev) =>
-      prev.map((item) => (item.id === req.id ? next : item))
+      prev.map((item) => (item.customerId === req.customerId ? next : item))
     );
     setSelectedRequest(next);
-    setMessages(messagesByRequest[req.id] ?? []);
+    setMessages(messagesByRequest[req.customerId] ?? []);
   };
 
   // 메시지 전송
-  const sendMessage = async () => {
+  const sendMessage = () => {
     if (!selectedRequest || !inputMessage.trim()) return;
+    if (!clientRef.current?.connected) return;
 
     const msg: Message = {
-      userId: "agent",
+      userId: userName,
       customerId: selectedRequest.customerId,
       content: inputMessage,
       timestamp: new Date().toISOString(),
     };
 
-    await fetch("http://localhost:8443/api/agent/send", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(msg),
-    });
+    clientRef.current.send("/app/agent/send", {}, JSON.stringify(msg));
     
     setMessages((prev) => [...prev, msg]);
 
     setMessagesByRequest((prevMap) => ({
       ...prevMap,
-      [selectedRequest.id]: [...(prevMap[selectedRequest.id] ?? []), msg],
+      [selectedRequest.customerId]: [...(prevMap[selectedRequest.customerId] ?? []), msg],
     }));
 
     setInputMessage("");
@@ -169,7 +200,7 @@ export default function AgentPage() {
 
     setConsultationRequests((prev) =>
       prev.map((item) =>
-        item.id === selectedRequest.id ? { ...item, status: "closed" } : item
+        item.customerId === selectedRequest.customerId ? { ...item, status: "closed" } : item
       )
     );
 
@@ -214,6 +245,8 @@ export default function AgentPage() {
               consultationRequests={consultationRequests}
               selectedRequest={selectedRequest}
               onClickRequest={handleRequestClick}
+              chatStatus={chatStatus}
+              onChatStatusChange={handleChatStatusChange}
             />
           </div>
 
@@ -235,6 +268,7 @@ export default function AgentPage() {
               sendMessage={sendMessage}
               onConfirmEnd={confirmEndConsultation}
               messagesEndRef={messagesEndRef}
+              currentUserId={userName || ""}
             />
           </div>
 

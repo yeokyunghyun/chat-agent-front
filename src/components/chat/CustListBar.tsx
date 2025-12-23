@@ -5,12 +5,16 @@ interface Props {
   consultationRequests: ConsultationRequest[];
   selectedRequest: ConsultationRequest | null;
   onClickRequest: (req: ConsultationRequest) => void;
+  chatStatus: "READY" | "NOT_READY";
+  onChatStatusChange: (status: "READY" | "NOT_READY") => void;
 }
 
 export default function CustListBar({
   consultationRequests,
   selectedRequest,
   onClickRequest,
+  chatStatus,
+  onChatStatusChange,
 }: Props) {
   const statusFilters = [
     { value: "pending", label: "상담 요청" },
@@ -35,6 +39,36 @@ export default function CustListBar({
     setEnabledStatus((prev) => ({ ...prev, [value]: !prev[value] }));
   };
 
+  const handleClickRequest = async (req: ConsultationRequest) => {
+
+    onClickRequest(req);
+
+    // 2) 상담 시작 알림 API 호출
+    try {
+      const res = await fetch("/api/agent/start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Authorization: `Bearer ${localStorage.getItem("accessToken") ?? ""}`,
+        },
+        body: JSON.stringify({
+          customerId: req.customerId,
+          customerName: req.customerName,
+          requestTime: req.requestTime,
+          status: req.status,
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        console.error("startConsultation failed:", res.status, text);
+      }
+    } catch (e) {
+      console.error("startConsultation error:", e);
+    }
+
+  };
+
   return (
     <div
       style={{
@@ -44,30 +78,60 @@ export default function CustListBar({
         flexDirection: "column",
       }}
     >
-      <h3
+      <div
         style={{
           padding: "12px 16px 8px 16px",
           margin: 0,
           borderBottom: "2px solid #2196F3",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
         }}
       >
-        상담 요청
-      </h3>
+        <h3 style={{ margin: 0 }}>상담 요청</h3>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <span
+            style={{
+              width: "10px",
+              height: "10px",
+              borderRadius: "50%",
+              background: chatStatus === "READY" ? "#22c55e" : "#ef4444",
+            }}
+          />
+          <select
+            value={chatStatus}
+            onChange={(e) => onChatStatusChange(e.target.value as "READY" | "NOT_READY")}
+            style={{
+              padding: "4px 8px",
+              borderRadius: "6px",
+              border: "1px solid #ddd",
+              fontSize: "12px",
+              fontWeight: 600,
+              cursor: "pointer",
+              background: chatStatus === "READY" ? "#dcfce7" : "#fee2e2",
+              color: chatStatus === "READY" ? "#166534" : "#991b1b",
+            }}
+          >
+            <option value="READY">채팅 ON</option>
+            <option value="NOT_READY">채팅 OFF</option>
+          </select>
+        </div>
+      </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "10px" }}>
         {filteredRequests.map((req) => (
           <div
-            key={req.id}
+            key={req.customerId}
             style={{
               padding: "12px",
               marginBottom: "10px",
               borderRadius: "8px",
               border: "1px solid #ddd",
               background:
-                selectedRequest?.id === req.id ? "#E3F2FD" : "white",
+                selectedRequest?.customerId === req.customerId ? "#E3F2FD" : "white",
               cursor: "pointer",
             }}
-            onClick={() => onClickRequest(req)}
+            onClick={() => handleClickRequest(req)}
           >
             <div style={{ fontWeight: "bold" }}>{req.customerName}</div>
             <div style={{ fontSize: "12px", color: "#2196F3", marginTop: "4px" }}>

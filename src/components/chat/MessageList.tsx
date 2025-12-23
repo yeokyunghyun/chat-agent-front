@@ -11,6 +11,7 @@ interface Props {
   sendMessage: () => void;
   onConfirmEnd?: () => void;
   messagesEndRef: any;
+  currentUserId: string;
 }
 
 export default function MessageList({
@@ -21,6 +22,7 @@ export default function MessageList({
   sendMessage,
   onConfirmEnd,
   messagesEndRef,
+  currentUserId,
 }: Props) {
   const [isEndConfirmOpen, setIsEndConfirmOpen] = useState(false);
 
@@ -82,27 +84,30 @@ export default function MessageList({
               background: "#f7f7f7",
             }}
           >
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                style={{
-                  marginBottom: "12px",
-                  textAlign: msg.userId === "agent" ? "right" : "left",
-                }}
-              >
+            {messages.map((msg, i) => {
+              const isCurrentUser = msg.userId === currentUserId;
+              return (
                 <div
+                  key={i}
                   style={{
-                    display: "inline-block",
-                    background: msg.userId === "agent" ? "#2196F3" : "white",
-                    color: msg.userId === "agent" ? "white" : "black",
-                    padding: "10px",
-                    borderRadius: "10px",
+                    marginBottom: "12px",
+                    textAlign: isCurrentUser ? "right" : "left",
                   }}
                 >
-                  {msg.content}
+                  <div
+                    style={{
+                      display: "inline-block",
+                      background: isCurrentUser ? "#2196F3" : "white",
+                      color: isCurrentUser ? "white" : "black",
+                      padding: "10px",
+                      borderRadius: "10px",
+                    }}
+                  >
+                    {msg.content}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             <div ref={messagesEndRef} />
           </div>
 
