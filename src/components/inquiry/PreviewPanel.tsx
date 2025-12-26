@@ -75,11 +75,13 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle, onSele
                     {quickActions.map((child) => (
                       <button
                         onClick={() => {
-                          console.log('>>> child >>>', child);
-                          console.log('>>> quickActions >>>', quickActions);
-                          
-                          console.log('>>> >>>',);
-                          
+                          if(selectedNode) {
+                                setExpandedIds((prev) => {
+                                const next = new Set(prev);
+                                next.add(selectedNode.id);
+                                return next;
+                              });
+                          }
                           onSelect(child.id);
                         }}
                         key={child.id}

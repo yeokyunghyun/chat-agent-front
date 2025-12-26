@@ -283,8 +283,8 @@ export default function InquiryTypePage() {
             selectedNode={selectedNode} 
             depth={depth} 
             currentTitle={currentTitle} 
-            onSelect={setSelectedId} 
-            setExpandedIds={setExpandedIds} 
+            onSelect={setSelectedId}
+            setExpandedIds={setExpandedIds}
           />
           <EditorPanel
             selectedNode={selectedNode}
