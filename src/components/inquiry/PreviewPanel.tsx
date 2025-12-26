@@ -1,21 +1,24 @@
+import type { Dispatch, SetStateAction } from "react";
 import EmptyState from "./EmptyState";
 import InfoCard from "./InfoCard";
 import PanelHeader from "./PanelHeader";
 import { panelStyle } from "./styles";
-import type { TreeNode } from "./types";
+import type { TreeNode } from "@/types/inqry";
 
 type PreviewPanelProps = {
   selectedNode: TreeNode | null;
   depth: number;
   currentTitle: string;
+  onSelect: (id: string) => void;
+  setExpandedIds: Dispatch<SetStateAction<Set<string>>>;
 };
 
-export default function PreviewPanel({ selectedNode, depth, currentTitle }: PreviewPanelProps) {
+export default function PreviewPanel({ selectedNode, depth, currentTitle, onSelect, setExpandedIds }: PreviewPanelProps) {
   const quickActions = selectedNode?.children ?? [];
 
   return (
     <section style={panelStyle}>
-      <PanelHeader title="선택한 유형 미리보기" />
+      {/* <PanelHeader title="선택한 유형 미리보기" /> */}
       <div
         style={{
           marginTop: "8px",
@@ -28,11 +31,13 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
       >
         {selectedNode ? (
           <>
-            <InfoCard label="이름" value={selectedNode.label} />
+            <InfoCard label="이름" value={selectedNode.title} />
             <InfoCard label="Depth" value={`${depth} Depth`} />
             <InfoCard label="전체 경로" value={currentTitle} />
+            
             <div
               style={{
+                marginTop: "30px",
                 border: "1px dashed #d1d5db",
                 borderRadius: "12px",
                 padding: "16px",
@@ -42,7 +47,7 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
                 gap: "12px",
               }}
             >
-              <div style={{ fontWeight: 700 }}>선택한 유형 화면 예시</div>
+
               <div
                 style={{
                   minHeight: "140px",
@@ -56,12 +61,9 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
                   fontWeight: 600,
                 }}
               >
-                {selectedNode.label} 화면입니다. 안내 문구나 상세 내용을 여기에 표시하세요.
+                {selectedNode.title}
               </div>
               <div>
-                <div style={{ fontWeight: 600, marginBottom: "8px", color: "#4b5563" }}>
-                  퀵버튼 (최대 3개씩 한 줄)
-                </div>
                 {quickActions.length ? (
                   <div
                     style={{
@@ -72,6 +74,16 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
                   >
                     {quickActions.map((child) => (
                       <button
+                        onClick={() => {
+                          if(selectedNode) {
+                                setExpandedIds((prev) => {
+                                const next = new Set(prev);
+                                next.add(selectedNode.id);
+                                return next;
+                              });
+                          }
+                          onSelect(child.id);
+                        }}
                         key={child.id}
                         style={{
                           padding: "12px 10px",
@@ -84,12 +96,12 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle }: Prev
                           textAlign: "center",
                         }}
                       >
-                        {child.label}
+                        {child.title}
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <EmptyState text="하위 퀵버튼이 없습니다. 좌측에서 유형을 선택하거나 추가하세요." />
+                  <EmptyState text="하위 퀵버튼이 존재하지 않습니다." />
                 )}
               </div>
             </div>

@@ -1,7 +1,7 @@
 import EmptyState from "./EmptyState";
 import PanelHeader from "./PanelHeader";
 import { panelStyle } from "./styles";
-import type { TreeNode } from "./types";
+import type { TreeNode } from "@/types/inqry"; 
 
 type TreePanelProps = {
   tree: TreeNode[];
@@ -9,6 +9,10 @@ type TreePanelProps = {
   expandedIds: Set<string>;
   onSelect: (id: string) => void;
   onToggle: (id: string) => void;
+  setRenameValue: (value: string) => void;
+  onAddRoot: () => void;
+  onDelete: () => void;
+  selectedNode: TreeNode | null;
 };
 
 export default function TreePanel({
@@ -17,15 +21,19 @@ export default function TreePanel({
   expandedIds,
   onSelect,
   onToggle,
+  setRenameValue,
+  onAddRoot,
+  onDelete,
+  selectedNode
 }: TreePanelProps) {
   return (
-    <section style={panelStyle}>
+    <section style={{ ...panelStyle, display: "flex", flexDirection: "column" }}>
       <PanelHeader title="문의 유형 트리 (3 Depth)" />
       <div
         style={{
           marginTop: "8px",
           overflow: "auto",
-          height: "100%",
+          flex: 1,
           minHeight: 0,
         }}
       >
@@ -39,11 +47,55 @@ export default function TreePanel({
               expandedIds={expandedIds}
               onSelect={onSelect}
               onToggle={onToggle}
+              setRenameValue={setRenameValue}
             />
           ))
         ) : (
           <EmptyState text="등록된 유형이 없습니다." />
         )}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          gap: "8px",
+          marginTop: "12px",
+          paddingTop: "12px",
+          borderTop: "1px solid #e5e7eb",
+        }}
+      >
+        {/* <button
+          onClick={onAddRoot}
+          style={{
+            flex: 1,
+            padding: "10px 12px",
+            background: "#4f46e5",
+            color: "#fff",
+            border: "none",
+            borderRadius: "8px",
+            fontWeight: 600,
+            fontSize: "12px",
+            cursor: "pointer",
+          }}
+        >
+          최상위 문의유형 추가
+        </button> */}
+        <button
+          onClick={onDelete}
+          disabled={!selectedNode}
+          style={{
+            flex: 1,
+            padding: "10px 12px",
+            background: selectedNode ? "#ef4444" : "#d1d5db",
+            color: "#fff",
+            border: "none",
+            borderRadius: "8px",
+            fontWeight: 600,
+            fontSize: "12px",
+            cursor: selectedNode ? "pointer" : "not-allowed",
+          }}
+        >
+          삭제하기
+        </button>
       </div>
     </section>
   );
@@ -56,6 +108,7 @@ type TreeRowProps = {
   expandedIds: Set<string>;
   onSelect: (id: string) => void;
   onToggle: (id: string) => void;
+  setRenameValue: (value: string) => void;
 };
 
 function TreeRow({
@@ -65,6 +118,7 @@ function TreeRow({
   expandedIds,
   onSelect,
   onToggle,
+  setRenameValue
 }: TreeRowProps) {
   const hasChildren = !!node.children?.length;
   const expanded = expandedIds.has(node.id);
@@ -84,7 +138,13 @@ function TreeRow({
           marginLeft: `${(depth - 1) * 14}px`,
           transition: "background-color 120ms ease, color 120ms ease",
         }}
-        onClick={() => onSelect(node.id)}
+        onClick={() => {
+          console.log("???????????????", node);
+          console.log('>>> expandedIds >>>', expandedIds);
+          
+          onSelect(node.id);
+          setRenameValue(node.title);
+        }}
         onMouseEnter={(e) => {
           if (selectedId !== node.id) {
             e.currentTarget.style.backgroundColor = "#f3f4f6";
@@ -99,6 +159,7 @@ function TreeRow({
         {hasChildren ? (
           <button
             onClick={(e) => {
+              console.log("onClick@@@", node.id);
               e.stopPropagation();
               onToggle(node.id);
             }}
@@ -120,7 +181,7 @@ function TreeRow({
         ) : (
           <span style={{ width: "22px" }} />
         )}
-        <div style={{ fontWeight: 600, fontSize: "14px" }}>{node.label}</div>
+        <div style={{ fontWeight: 600, fontSize: "14px" }}>{node.title}</div>
       </div>
 
       {hasChildren && expanded && (
@@ -134,6 +195,7 @@ function TreeRow({
               expandedIds={expandedIds}
               onSelect={onSelect}
               onToggle={onToggle}
+              setRenameValue={setRenameValue}
             />
           ))}
         </div>

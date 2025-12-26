@@ -1,11 +1,32 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getAuth } from "@/selectors";
+import { loginSuccess, logout } from "@/slices/auth";
 
 export default function MainLayout() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+  const auth = useSelector(getAuth);
   const sidebarWidth = 240;
+
+  // 새로고침 시에도 로그인 사용자 이름 유지
+  useEffect(() => {
+    const storedUsername = localStorage.getItem("username");
+    if (storedUsername && !auth.username) {
+      dispatch(loginSuccess(storedUsername));
+    }
+  }, [auth.username, dispatch]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("username");
+    localStorage.removeItem("ACCESS_TOKEN");
+    localStorage.removeItem("REFRESH_TOKEN");
+    dispatch(logout());
+    navigate("/");
+  };
 
   const menuItems = useMemo(
     () => [
@@ -37,6 +58,7 @@ export default function MainLayout() {
           height: "56px",
           display: "flex",
           alignItems: "center",
+          justifyContent: "space-between",
           padding: "0 16px",
           backgroundColor: "#ffffff",
           borderBottom: "1px solid #e5e7eb",
@@ -45,7 +67,37 @@ export default function MainLayout() {
           zIndex: 5,
         }}
       >
-        {/* 필요 시 상단 헤더 콘텐츠 영역 */}
+        {/* 필요 시 상단 헤더 콘텐츠 영역 (왼쪽) */}
+        <div />
+
+        {/* 오른쪽: 로그인 사용자 이름 및 로그아웃 */}
+        <div
+          style={{
+            marginLeft: "auto",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            fontSize: "14px",
+            color: "#374151",
+          }}
+        >
+          {auth.username && <span>{auth.username} 님</span>}
+          {auth.username && (
+            <button
+              onClick={handleLogout}
+              style={{
+                padding: "6px 10px",
+                fontSize: "13px",
+                borderRadius: "999px",
+                border: "1px solid #d1d5db",
+                backgroundColor: "#f9fafb",
+                cursor: "pointer",
+              }}
+            >
+              로그아웃
+            </button>
+          )}
+        </div>
       </header>
 
       {/* 본문 레이아웃 */}
