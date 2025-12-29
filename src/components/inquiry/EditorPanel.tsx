@@ -360,30 +360,40 @@ export default function EditorPanel({
               )}
             </div>
 
-            <div>
-              <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "6px", color: "#374151" }}>
-                내용 *
-              </label>
-              <textarea
-                value={currentNodeContent}
-                onChange={(e) => onCurrentNodeContentChange(e.target.value)}
-                placeholder="내용을 입력하세요"
-                rows={4}
-                style={{
-                  ...inputStyle,
-                  width: "100%",
-                  boxSizing: "border-box",
-                  borderColor: currentNodeValidationErrors?.content ? "#ef4444" : "#d1d5db",
-                  resize: "vertical",
-                  fontFamily: "inherit",
-                }}
-              />
-              {currentNodeValidationErrors?.content && (
-                <div style={{ fontSize: "12px", color: "#ef4444", marginTop: "4px" }}>
-                  {currentNodeValidationErrors.content}
-                </div>
-              )}
-            </div>
+            {currentNodeType !== "counseling" && (
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    marginBottom: "6px",
+                    color: "#374151",
+                  }}
+                >
+                  내용 *
+                </label>
+                <textarea
+                  value={currentNodeContent}
+                  onChange={(e) => onCurrentNodeContentChange(e.target.value)}
+                  placeholder="내용을 입력하세요"
+                  rows={4}
+                  style={{
+                    ...inputStyle,
+                    width: "100%",
+                    boxSizing: "border-box",
+                    borderColor: currentNodeValidationErrors?.content ? "#ef4444" : "#d1d5db",
+                    resize: "vertical",
+                    fontFamily: "inherit",
+                  }}
+                />
+                {currentNodeValidationErrors?.content && (
+                  <div style={{ fontSize: "12px", color: "#ef4444", marginTop: "4px" }}>
+                    {currentNodeValidationErrors.content}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div>
               <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "6px", color: "#374151" }}>

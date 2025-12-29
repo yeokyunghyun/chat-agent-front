@@ -9,11 +9,12 @@ type PreviewPanelProps = {
   selectedNode: TreeNode | null;
   depth: number;
   currentTitle: string;
+  currentNodeType: string;
   onSelect: (id: string) => void;
   setExpandedIds: Dispatch<SetStateAction<Set<string>>>;
 };
 
-export default function PreviewPanel({ selectedNode, depth, currentTitle, onSelect, setExpandedIds }: PreviewPanelProps) {
+export default function PreviewPanel({ selectedNode, depth, currentTitle, currentNodeType, onSelect, setExpandedIds }: PreviewPanelProps) {
   const quickActions = selectedNode?.children ?? [];
 
   return (
@@ -29,12 +30,13 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle, onSele
           minHeight: 0,
         }}
       >
-        {selectedNode ? (
+      {selectedNode ? (
+        currentNodeType === "block" ? (
           <>
             <InfoCard label="이름" value={selectedNode.title} />
             <InfoCard label="Depth" value={`${depth} Depth`} />
             <InfoCard label="전체 경로" value={currentTitle} />
-            
+
             <div
               style={{
                 marginTop: "30px",
@@ -47,7 +49,6 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle, onSele
                 gap: "12px",
               }}
             >
-
               <div
                 style={{
                   minHeight: "140px",
@@ -63,6 +64,7 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle, onSele
               >
                 {selectedNode.content}
               </div>
+
               <div>
                 {quickActions.length ? (
                   <div
@@ -74,17 +76,15 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle, onSele
                   >
                     {quickActions.map((child) => (
                       <button
+                        key={child.id}
                         onClick={() => {
-                          if(selectedNode) {
-                                setExpandedIds((prev) => {
-                                const next = new Set(prev);
-                                next.add(selectedNode.id);
-                                return next;
-                              });
-                          }
+                          setExpandedIds((prev) => {
+                            const next = new Set(prev);
+                            next.add(selectedNode.id);
+                            return next;
+                          });
                           onSelect(child.id);
                         }}
-                        key={child.id}
                         style={{
                           padding: "12px 10px",
                           borderRadius: "10px",
@@ -106,9 +106,34 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle, onSele
               </div>
             </div>
           </>
+        ) : currentNodeType === "counseling" ? (
+          <>
+            <InfoCard label="이름" value={selectedNode.title} />
+            <InfoCard label="Depth" value={`${depth} Depth`} />
+            <InfoCard label="전체 경로" value={currentTitle} />
+
+            <div
+              style={{
+                marginTop: "30px",
+                padding: "20px",
+                borderRadius: "12px",
+                background: "#fff7ed",
+                border: "1px solid #fed7aa",
+                color: "#9a3412",
+                fontWeight: 600,
+                textAlign: "center",
+              }}
+            >
+              상담 블럭입니다.  
+              해당 유형은 퀵버튼을 제공하지 않습니다.
+            </div>
+          </>
         ) : (
-          <EmptyState text="좌측에서 유형을 선택해 주세요." />
-        )}
+          <EmptyState text="유형 정보가 올바르지 않습니다." />
+        )
+      ) : (
+        <EmptyState text="좌측에서 유형을 선택해 주세요." />
+      )}
       </div>
     </section>
   );

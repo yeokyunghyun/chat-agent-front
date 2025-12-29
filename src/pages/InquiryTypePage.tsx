@@ -398,6 +398,7 @@ export default function InquiryTypePage() {
             selectedNode={selectedNode} 
             depth={depth} 
             currentTitle={currentTitle} 
+            currentNodeType={currentNodeType}
             onSelect={setSelectedId}
             setExpandedIds={setExpandedIds}
           />
