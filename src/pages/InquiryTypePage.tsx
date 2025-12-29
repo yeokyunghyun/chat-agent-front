@@ -4,7 +4,6 @@ import PreviewPanel from "../components/inquiry/PreviewPanel";
 import TreePanel from "../components/inquiry/TreePanel";
 import type { TreeNode } from "@/types/inqry";
 import HeaderBar from "@/components/common/HeaderBar";
-import { apiFetch } from "@/utils/api";
 
 export default function InquiryTypePage() {
   const [tree, setTree] = useState<TreeNode[]>([]);
@@ -31,8 +30,9 @@ export default function InquiryTypePage() {
     type?: string;
   }>({});
   const [isChildModalOpen, setIsChildModalOpen] = useState(false);
+  const accessToken = localStorage.getItem("ACCESS_TOKEN");
   const loadTree = async () => {
-    const res = await apiFetch("/api/select/inquiryTypeTree");
+    const res = await fetch("/api/select/inquiryTypeTree");
     const data: TreeNode[] = await res.json();
 
     setTree(data);
@@ -143,8 +143,12 @@ export default function InquiryTypePage() {
     setValidationErrors({});
 
     try {
-      const res = await apiFetch("/api/insert/inquiryType", {
+      const res = await fetch("/api/insert/inquiryType", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           parentId: selectedNode.id,
           title: newChildTitle.trim(),
@@ -201,8 +205,12 @@ export default function InquiryTypePage() {
     setCurrentNodeValidationErrors({});
 
     try {
-      const res = await apiFetch("/api/update/inquiryType", {
+      const res = await fetch("/api/update/inquiryType", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           id: selectedNode.id,
           title: currentNodeTitle.trim(),
@@ -233,8 +241,11 @@ export default function InquiryTypePage() {
     }
     
     try {
-      const res = await apiFetch("/api/insert/inquiryType", {
+      const res = await fetch("/api/insert/inquiryType", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           parentId: null,
           title: newRootLabel.trim(),
@@ -256,8 +267,11 @@ export default function InquiryTypePage() {
   const renameSelected = async () => {
     if (!selectedNode || !renameValue.trim()) return;
     
-      const res = await apiFetch("/api/update/inquiryTypeName", {
+      const res = await fetch("/api/update/inquiryTypeName", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           id: selectedNode.id,
           title: renameValue,
@@ -292,8 +306,11 @@ export default function InquiryTypePage() {
     }
 
     try {
-      const res = await apiFetch("/api/delete/inquiryType", {
+      const res = await fetch("/api/delete/inquiryType", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           id: selectedNode.id,
         }),
