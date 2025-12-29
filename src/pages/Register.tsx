@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import apiClient from "@/utils/api";
 import { useNavigate } from "react-router-dom";
 
 export default function Register() {
@@ -9,7 +9,7 @@ export default function Register() {
 
   const register = async () => {
     try {
-      await axios.post("http://localhost:8443/api/register", {
+      await apiClient.post("/register", {
         username,
         password,
       });

@@ -3,14 +3,14 @@ import { login, loginSuccess, loginError } from '@/slices/auth'
 import { useSelector } from "react-redux";
 import { getAuth } from "@/selectors";
 
-import axios from "axios"
+import apiClient from "@/utils/api"
 import type { AuthState } from '@/types';
 
 function* loginUser(action: ReturnType<typeof login>) {
   try {
     const { username, password } = action.payload
 
-    const { data } = yield axios.post("http://localhost:8443/api/login", {
+    const { data } = yield apiClient.post("/login", {
       username,
       password
     })
