@@ -144,6 +144,7 @@ function TreeRow({
           
           onSelect(node.id);
           setRenameValue(node.title);
+          
         }}
         onMouseEnter={(e) => {
           if (selectedId !== node.id) {

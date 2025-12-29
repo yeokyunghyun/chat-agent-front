@@ -61,7 +61,7 @@ export default function PreviewPanel({ selectedNode, depth, currentTitle, onSele
                   fontWeight: 600,
                 }}
               >
-                {selectedNode.title}
+                {selectedNode.content}
               </div>
               <div>
                 {quickActions.length ? (

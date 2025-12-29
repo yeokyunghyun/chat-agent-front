@@ -10,11 +10,27 @@ export default function InquiryTypePage() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const [selectedId, setSelectedId] = useState<string>("");
 
-  const [newChildLabel, setNewChildLabel] = useState("새 하위 문의 유형");
+  const [newChildTitle, setNewChildTitle] = useState("");
+  const [newChildContent, setNewChildContent] = useState("");
+  const [newChildType, setNewChildType] = useState("block");
   const [newRootLabel, setNewRootLabel] = useState("새 최상위 문의 유형");
   const [renameValue, setRenameValue] = useState<string>("");
   const [deleteValue, setDeleteValue] = useState<boolean>(false);
-
+  const [currentNodeTitle, setCurrentNodeTitle] = useState("");
+  const [currentNodeContent, setCurrentNodeContent] = useState("");
+  const [currentNodeType, setCurrentNodeType] = useState("block");
+  const [validationErrors, setValidationErrors] = useState<{
+    title?: string;
+    content?: string;
+    type?: string;
+  }>({});
+  const [currentNodeValidationErrors, setCurrentNodeValidationErrors] = useState<{
+    title?: string;
+    content?: string;
+    type?: string;
+  }>({});
+  const [isChildModalOpen, setIsChildModalOpen] = useState(false);
+  const accessToken = localStorage.getItem("ACCESS_TOKEN");
   const loadTree = async () => {
     const res = await fetch("/api/select/inquiryTypeTree");
     const data: TreeNode[] = await res.json();
@@ -72,6 +88,22 @@ export default function InquiryTypePage() {
     return findNode(tree, selectedId);
   }, [selectedId, tree]);
 
+  // selectedNode가 변경될 때 input, textarea, radio에 값 채우기
+  useEffect(() => {
+    if (selectedNode) {
+      // 자기 자신 노드 수정용 값 세팅
+      setCurrentNodeTitle(selectedNode.title || "");
+      setCurrentNodeContent(selectedNode.content || "");
+      // DB에서 오는 type 값(block/counseling)을 그대로 세팅
+      setCurrentNodeType(selectedNode.type || "block");
+      
+      // 하위 문의 유형 추가용 초기값 세팅
+      setNewChildTitle("");
+      setNewChildContent("");
+      setNewChildType("block");
+    }
+  }, [selectedNode]);
+
   const toggleExpand = (id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
@@ -82,21 +114,46 @@ export default function InquiryTypePage() {
   };
 
   const addChildToNode = async () => {
-    if (!selectedNode || !newChildLabel.trim()) {
-      alert("문의유형 이름을 입력해주세요.");
+    if (!selectedNode) {
       return;
     }
 
+    // Validation
+    const errors: {
+      title?: string;
+      content?: string;
+      type?: string;
+    } = {};
+
+    if (!newChildTitle.trim()) {
+      errors.title = "제목을 입력해주세요.";
+    }
+    if (!newChildContent.trim()) {
+      errors.content = "내용을 입력해주세요.";
+    }
+    if (!newChildType) {
+      errors.type = "유형을 선택해주세요.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
+    setValidationErrors({});
+
     try {
-      
       const res = await fetch("/api/insert/inquiryType", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           parentId: selectedNode.id,
-          title: newChildLabel.trim(),
+          title: newChildTitle.trim(),
+          content: newChildContent.trim(),
+          type: newChildType,
         }),
       });
 
@@ -104,7 +161,11 @@ export default function InquiryTypePage() {
         throw new Error("문의 유형 추가에 실패했습니다.");
       }
 
-      setNewChildLabel("새 하위 문의 유형");
+      setNewChildTitle("");
+      setNewChildContent("");
+      setNewChildType("block");
+      setValidationErrors({});
+      setIsChildModalOpen(false);
       await loadTree();
       alert("문의 유형이 추가되었습니다.");
       if (selectedNode) {
@@ -113,6 +174,60 @@ export default function InquiryTypePage() {
     } catch (error) {
       console.error("Error adding child node:", error);
       alert("문의 유형 추가 중 오류가 발생했습니다.");
+    }
+  };
+
+  const updateCurrentNode = async () => {
+    if (!selectedNode) return;
+
+    // Validation
+    const errors: {
+      title?: string;
+      content?: string;
+      type?: string;
+    } = {};
+
+    if (!currentNodeTitle.trim()) {
+      errors.title = "제목을 입력해주세요.";
+    }
+    if (!currentNodeContent.trim()) {
+      errors.content = "내용을 입력해주세요.";
+    }
+    if (!currentNodeType) {
+      errors.type = "유형을 선택해주세요.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setCurrentNodeValidationErrors(errors);
+      return;
+    }
+
+    setCurrentNodeValidationErrors({});
+
+    try {
+      const res = await fetch("/api/update/inquiryType", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          id: selectedNode.id,
+          title: currentNodeTitle.trim(),
+          content: currentNodeContent.trim(),
+          type: currentNodeType,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("업데이트에 실패했습니다.");
+      }
+
+      await loadTree();
+      alert("문의 유형이 수정되었습니다.");
+    } catch (error) {
+      console.error("Error updating node:", error);
+      alert("문의 유형 수정 중 오류가 발생했습니다.");
     }
   };
 
@@ -290,16 +405,29 @@ export default function InquiryTypePage() {
             selectedNode={selectedNode}
             depth={depth}
             currentTitle={currentTitle}
-            renameValue={renameValue}
-            onRenameChange={setRenameValue}
-            onRenameSubmit={renameSelected}
-            newChildLabel={newChildLabel}
-            onNewChildChange={setNewChildLabel}
+            currentNodeTitle={currentNodeTitle}
+            onCurrentNodeTitleChange={setCurrentNodeTitle}
+            currentNodeContent={currentNodeContent}
+            onCurrentNodeContentChange={setCurrentNodeContent}
+            currentNodeType={currentNodeType}
+            onCurrentNodeTypeChange={setCurrentNodeType}
+            onUpdateCurrentNode={updateCurrentNode}
+            newChildTitle={newChildTitle}
+            onNewChildTitleChange={setNewChildTitle}
+            newChildContent={newChildContent}
+            onNewChildContentChange={setNewChildContent}
+            newChildType={newChildType}
+            onNewChildTypeChange={setNewChildType}
             onAddChild={addChildToNode}
             newRootLabel={newRootLabel}
             onNewRootChange={setNewRootLabel}
             onAddRoot={addRootNode}
             isEmpty={tree.length === 0}
+            validationErrors={validationErrors}
+            currentNodeValidationErrors={currentNodeValidationErrors}
+            isChildModalOpen={isChildModalOpen}
+            onOpenChildModal={() => setIsChildModalOpen(true)}
+            onCloseChildModal={() => setIsChildModalOpen(false)}
           />
         </div>
       </div>
@@ -307,29 +435,3 @@ export default function InquiryTypePage() {
   );
 }
 
-function addChild(node: TreeNode, targetId: string, title: string): TreeNode {
-  if (node.id === targetId) {
-    const nextChild: TreeNode = {
-      id: `${node.id}-${(node.children?.length || 0) + 1}`,
-      title,
-    };
-    return {
-      ...node,
-      children: [...(node.children || []), nextChild],
-    };
-  }
-  if (!node.children) return node;
-  return {
-    ...node,
-    children: node.children.map((child) => addChild(child, targetId, title)),
-  };
-}
-
-function renameNode(node: TreeNode, targetId: string, title: string): TreeNode {
-  if (node.id === targetId) return { ...node, title };
-  if (!node.children) return node;
-  return {
-    ...node,
-    children: node.children.map((child) => renameNode(child, targetId, title)),
-  };
-}

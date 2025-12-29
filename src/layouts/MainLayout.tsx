@@ -12,13 +12,22 @@ export default function MainLayout() {
   const auth = useSelector(getAuth);
   const sidebarWidth = 240;
 
-  // 새로고침 시에도 로그인 사용자 이름 유지
+  // 인증 체크 및 새로고침 시에도 로그인 사용자 이름 유지
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
+    const accessToken = localStorage.getItem("ACCESS_TOKEN");
+    
+    // 인증 정보가 없으면 홈으로 리다이렉트
+    if (!storedUsername && !auth.username && !accessToken) {
+      navigate("/");
+      return;
+    }
+    
+    // localStorage에 username이 있으면 Redux state에 복원
     if (storedUsername && !auth.username) {
       dispatch(loginSuccess(storedUsername));
     }
-  }, [auth.username, dispatch]);
+  }, [auth.username, dispatch, navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("username");
