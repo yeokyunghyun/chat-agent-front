@@ -194,25 +194,49 @@ export default function AgentPage() {
     setInputMessage("");
   };
 
-  // 상담 종료
+  // 상담 종료 (후처리 단계로 이동)
   const confirmEndConsultation = () => {
     if (!selectedRequest) return;
 
     setConsultationRequests((prev) =>
       prev.map((item) =>
-        item.customerId === selectedRequest.customerId ? { ...item, status: "closed" } : item
+        item.customerId === selectedRequest.customerId ? { ...item, status: "post_process" } : item
       )
     );
 
-    setSelectedRequest(null);
-    setMessages([]);
+    setSelectedRequest((prev) => prev ? { ...prev, status: "post_process" } : null);
+  };
+
+  // 상태 변경 핸들러
+  const handleStatusChange = (customerId: string, status: ConsultationRequest["status"]) => {
+    setConsultationRequests((prev) =>
+      prev.map((item) =>
+        item.customerId === customerId ? { ...item, status } : item
+      )
+    );
+
+    if (selectedRequest?.customerId === customerId) {
+      setSelectedRequest((prev) => prev ? { ...prev, status } : null);
+    }
+  };
+
+  // 상담 저장 핸들러
+  const handleSaveConsultation = async (data: {
+    aiSummary?: string;
+    memo?: string;
+    tags?: string[];
+    category?: string;
+  }) => {
+    if (!selectedRequest) return;
+    console.log("상담 저장 데이터:", data);
+    // 저장 로직은 CustDetailBar에서 이미 처리됨
   };
 
   return (
     <div style={{ height: "100%", padding: "18px 6px 18px 6px", boxSizing: "border-box" }}>
       <div
         style={{
-          maxWidth: "1400px",
+          maxWidth: "1600px",
           margin: "0 auto",
           display: "flex",
           flexDirection: "column",
@@ -227,8 +251,9 @@ export default function AgentPage() {
             flex: 1,
             minHeight: 0,
             display: "grid",
-            gridTemplateColumns: "300px minmax(460px, 1fr) 320px",
+            gridTemplateColumns: "300px minmax(460px, 1fr) minmax(350px, 400px)",
             gap: "12px",
+            overflow: "hidden",
           }}
         >
           <div
@@ -280,11 +305,14 @@ export default function AgentPage() {
               boxShadow: "0 4px 18px rgba(0,0,0,0.04)",
               overflow: "hidden",
               display: "flex",
+              minWidth: 0,
             }}
           >
             <CustDetailBar
               selectedRequest={selectedRequest}
               messages={messages}
+              onStatusChange={handleStatusChange}
+              onSave={handleSaveConsultation}
             />
           </div>
         </div>
